@@ -1,8 +1,8 @@
-module progr3.mail.server.progr3_mail_server {
+module progr3.mail.server.app {
     requires javafx.controls;
     requires javafx.fxml;
 
 
-    opens progr3.mail.server.progr3_mail_server to javafx.fxml;
-    exports progr3.mail.server.progr3_mail_server;
+    opens progr3.mail.server.app to javafx.fxml;
+    exports progr3.mail.server.app;
 }

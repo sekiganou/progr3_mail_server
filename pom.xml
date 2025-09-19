@@ -61,7 +61,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                progr3.mail.server.progr3_mail_server/progr3.mail.server.progr3_mail_server.HelloApplication
+                                progr3.mail.server.progr3_mail_server/progr3.mail.server.app.HelloApplication
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
