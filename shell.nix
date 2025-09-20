@@ -86,8 +86,6 @@ pkgs.mkShell {
 
     echo "JavaFX development environment loaded!"
     echo "LD_LIBRARY_PATH includes GTK3 and X11 libraries"
-    echo ""
-    echo "Try running:"
-    echo "mvn clean compile exec:java -Dexec.mainClass=\"progr3.mail.server.app.Launcher\""
+    echo "You can now run your JavaFX applications."
   '';
 }
