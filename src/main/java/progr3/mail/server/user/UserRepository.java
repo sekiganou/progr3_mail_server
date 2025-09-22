@@ -4,21 +4,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.model.User;
 
 public class UserRepository implements IUserRepository {
 
+    private final IJsonFileHandler jsonFileHandler;
     private final Map<String, User> usersByEmail = new HashMap<>();
     private final Map<String, User> usersById = new HashMap<>();
-    private final JsonFileHandler jsonFileHandler = new JsonFileHandler();
-    private static final String filePath = "data/users.json";
+    private final String filePath;
 
-    public UserRepository() {
-        this.loadUsers();
+    public UserRepository(IJsonFileHandler jsonFileHandler, String filePath) {
+        this.jsonFileHandler = jsonFileHandler;
+        this.filePath = filePath;
+        this.loadUsersFromFile();
     }
 
-    private void loadUsers() {
+    private void loadUsersFromFile() {
         List<User> users = List.of();
         try {
             users = jsonFileHandler.loadFromFile(filePath, User.class);

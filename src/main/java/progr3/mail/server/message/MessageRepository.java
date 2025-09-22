@@ -1,24 +1,25 @@
 package progr3.mail.server.message;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.model.Message;
 
 public class MessageRepository implements IMessageRepository {
 
+    private final IJsonFileHandler jsonFileHandler;
     private final Map<String, Message> messagesById = new HashMap<>();
-    private final JsonFileHandler jsonFileHandler = new JsonFileHandler();
-    private static final String filePath = "data/messages.json";
+    private final String filePath;
 
-    public MessageRepository() {
-        this.loadMessages();
+    public MessageRepository(IJsonFileHandler jsonFileHandler, String filePath) {
+        this.jsonFileHandler = jsonFileHandler;
+        this.filePath = filePath;
+        this.loadMessagesFromFile();
     }
 
-    private void loadMessages() {
+    private void loadMessagesFromFile() {
         List<Message> messages = List.of();
         try {
             messages = jsonFileHandler.loadFromFile(filePath, Message.class);
@@ -30,9 +31,19 @@ public class MessageRepository implements IMessageRepository {
         }
     }
 
-    private boolean saveMessages(List<Message> messages) {
+    private boolean saveMessageToFile(Message message) {
         try {
-            jsonFileHandler.saveToFile(messages, filePath);
+            jsonFileHandler.saveToFile(message, filePath, Message.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean deleteMessageFromFile(Message message) {
+        try {
+            jsonFileHandler.removeFromFile(message, filePath, Message.class);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -56,13 +67,14 @@ public class MessageRepository implements IMessageRepository {
             return false;
         }
         messagesById.put(message.getGuid(), message);
-        return saveMessages(new ArrayList<>(messagesById.values()));
+        return saveMessageToFile(message);
     }
 
     @Override
     public boolean deleteMessage(String messageId) {
+        Message message = messagesById.get(messageId);
         messagesById.remove(messageId);
-        return saveMessages(new ArrayList<>(messagesById.values()));
+        return deleteMessageFromFile(message);
     }
 
 }

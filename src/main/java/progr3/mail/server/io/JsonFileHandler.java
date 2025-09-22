@@ -2,25 +2,78 @@ package progr3.mail.server.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonFileHandler {
+public class JsonFileHandler implements IJsonFileHandler {
     private final ObjectMapper mapper;
-    
+    private final Map<String, ReadWriteLock> fileLocks = new ConcurrentHashMap<>();
+
     public JsonFileHandler() {
         this.mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    
-    public void saveToFile(Object obj, String filename) throws IOException {
-        mapper.writeValue(new File(filename), obj);
+
+    public <T> void saveToFile(T obj, String filename, Class<T> clazz) throws IOException {
+        ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
+        lock.writeLock().lock();
+        try {
+            File file = new File(filename);
+            List<T> data;
+
+            if (file.exists() && file.length() > 0) {
+                data = loadFromFile(filename, clazz);
+            } else {
+                data = new ArrayList<>();
+            }
+
+            data.add((T) obj);
+            mapper.writeValue(file, data);
+
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
-    
+
     public <T> List<T> loadFromFile(String filename, Class<T> clazz) throws IOException {
-        return mapper.readValue(new File(filename), mapper.getTypeFactory().constructCollectionType(List.class, clazz)
-    );
+        ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
+        List<T> result = List.of();
+        lock.readLock().lock();
+        try {
+            result = mapper.readValue(new File(filename),
+                    mapper.getTypeFactory().constructCollectionType(List.class, clazz));
+        } finally {
+            lock.readLock().unlock();
+        }
+        return result;
+    }
+
+    public <T> void removeFromFile(T obj, String filename, Class<T> clazz) throws IOException {
+        ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
+        lock.writeLock().lock();
+        try {
+            File file = new File(filename);
+            List<T> data;
+
+            if (file.exists() && file.length() > 0) {
+                data = loadFromFile(filename, clazz);
+            } else {
+                return;
+            }
+
+            data.remove(obj);
+            mapper.writeValue(file, data);
+
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }
