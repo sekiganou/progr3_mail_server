@@ -5,7 +5,7 @@ import java.util.List;
 import progr3.mail.server.model.Message;
 
 public interface IMessageRepository {
-        List<Message> getAllMessages();
+        List<Message> getAllMessages(String userId);
 
         Message getMessageDetails(String messageId);
 

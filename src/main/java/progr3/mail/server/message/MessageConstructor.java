@@ -1,0 +1,22 @@
+package progr3.mail.server.message;
+
+import java.util.List;
+import java.util.UUID;
+
+import progr3.mail.server.model.Message;
+import progr3.mail.server.model.Message.IsForwarded;
+
+public class MessageConstructor {
+    public static Message create(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
+        var message = new Message();
+        message.setSenderUserGUID(senderUserId);
+        message.setRecipientsUserGUIDs(recipientsUserEmails);
+        message.setSubject(subject);
+        message.setBody(body);
+        message.setGuid(UUID.randomUUID().toString());
+        message.setDate(new java.util.Date());
+        message.setIsForwarded(IsForwarded.NO);
+        return message;
+    }
+
+}

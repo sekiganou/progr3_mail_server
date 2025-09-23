@@ -1,5 +1,6 @@
 package progr3.mail.server.message;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import progr3.mail.server.model.Message;
 public class MessageRepository implements IMessageRepository {
 
     private final IJsonFileHandler jsonFileHandler;
+    private final Map<String, List<Message>> messagesByUserId = new HashMap<>();
     private final Map<String, Message> messagesById = new HashMap<>();
     private final String filePath;
 
@@ -24,6 +26,8 @@ public class MessageRepository implements IMessageRepository {
         try {
             messages = jsonFileHandler.loadFromFile(filePath, Message.class);
             for (Message message : messages) {
+                messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
+                        .add(message);
                 messagesById.put(message.getGuid(), message);
             }
         } catch (Exception e) {
@@ -42,6 +46,13 @@ public class MessageRepository implements IMessageRepository {
     }
 
     private boolean deleteMessageFromFile(Message message) {
+        if (message == null)
+            return false;
+
+        var messageExists = messagesById.get(message.getGuid()) != null;
+        if (!messageExists)
+            return false;
+
         try {
             jsonFileHandler.removeFromFile(message, filePath, Message.class);
             return true;
@@ -52,8 +63,8 @@ public class MessageRepository implements IMessageRepository {
     }
 
     @Override
-    public List<Message> getAllMessages() {
-        return List.copyOf(messagesById.values());
+    public List<Message> getAllMessages(String userId) {
+        return messagesByUserId.getOrDefault(userId, new ArrayList<>());
     }
 
     @Override

@@ -1,10 +1,10 @@
 package progr3.mail.server.message;
 
 import java.util.List;
-import java.util.UUID;
 
 import progr3.mail.server.app.ILogger;
 import progr3.mail.server.model.Message;
+import progr3.mail.server.model.Message.IsForwarded;
 import progr3.mail.server.user.IUserRepository;
 
 public class MessageService {
@@ -21,17 +21,6 @@ public class MessageService {
         this.userRepository = userRepository;
     }
 
-    private Message createMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
-        var message = new Message();
-        message.setSenderUserGUID(senderUserId);
-        message.setRecipientsUserGUIDs(recipientsUserEmails);
-        message.setSubject(subject);
-        message.setBody(body);
-        message.setGuid(UUID.randomUUID().toString());
-        message.setDate(new java.util.Date());
-        return message;
-    }
-
     public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
 
         for (String recipientUser : recipientsUserEmails) {
@@ -41,63 +30,62 @@ public class MessageService {
             }
         }
 
-        var message = createMessage(senderUserId,
+        var message = MessageConstructor.create(senderUserId,
                 recipientsUserEmails,
                 subject,
                 body);
 
-        try {
-            messageRepository.saveMessage(message);
-            return message.getGuid();
-        } catch (Exception e) {
-            logger.logError("Failed to save message", e);
-            return null;
-        }
+        return messageRepository.saveMessage(message) ? message.getGuid() : null;
     }
 
     public String replySingleToMessage(String senderUserId, String messageId, String subject,
             String body) {
         var originalMessage = messageRepository.getMessageDetails(messageId);
-        var messageReply = createMessage(
+        var messageReply = MessageConstructor.create(
                 senderUserId,
                 List.of(originalMessage.getSenderUserGUID()),
                 subject,
                 body);
 
-        try {
-            messageRepository.saveMessage(messageReply);
-            return messageReply.getGuid();
-        } catch (Exception e) {
-            logger.logError("Failed to save message", e);
-            return null;
-        }
-
+        return messageRepository.saveMessage(messageReply) ? messageReply.getGuid() : null;
     };
 
-    public String replyAllToMessage(String messageId,
+    public String replyAllToMessage(String senderUserId, String messageId,
             String subject, String body) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'replyAllToMessage'");
+        var originalMessage = messageRepository.getMessageDetails(messageId);
+        var recipients = originalMessage.getRecipientsUserGUIDs();
+        recipients.add(originalMessage.getSenderUserGUID());
+        var messageReply = MessageConstructor.create(
+                senderUserId,
+                recipients,
+                subject,
+                body);
+
+        ;
+        return messageRepository.saveMessage(messageReply) ? messageReply.getGuid() : null;
     }
 
-    public boolean forwardMessage(String forwarderUserId, List<String> recipientsUserEmails) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'forwardMessage'");
+    public boolean forwardMessage(String forwarderUserId, String messageId,
+            List<String> recipientsUserEmails) {
+        var originalMessage = messageRepository.getMessageDetails(messageId);
+        originalMessage.setIsForwarded(IsForwarded.YES);
+        originalMessage.setSenderUserGUID(forwarderUserId);
+        originalMessage.setRecipientsUserGUIDs(recipientsUserEmails);
+
+        return messageRepository.saveMessage(originalMessage);
+
     }
 
     public List<Message> getAllUserMessages(String userId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllUserMessages'");
+        return messageRepository.getAllMessages(userId);
     };
 
     public Message getMessageDetails(String messageId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMessageDetails'");
+        return messageRepository.getMessageDetails(messageId);
     }
 
     public boolean deleteMessage(String messageId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteMessage'");
+        return messageRepository.deleteMessage(messageId);
     }
 
 }

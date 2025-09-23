@@ -5,9 +5,11 @@ module progr3.mail.server.app {
 
     requires com.fasterxml.jackson.annotation;
     requires com.fasterxml.jackson.databind;
-
+    // requires org.junit.jupiter.api;
+    // requires org.mockito.junit.jupiter;
 
     opens progr3.mail.server.app to javafx.fxml;
+
     exports progr3.mail.server.app;
     exports progr3.mail.server.model;
 }
