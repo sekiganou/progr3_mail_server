@@ -2,14 +2,17 @@ package progr3.mail.server.message;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,22 +49,20 @@ public class MessageRepositoryTest {
         mockJsonFileHandler.saveToFile(testMessage2, filePath, messageClass);
 
         // Mock the file loading
-        mockMessages = mockJsonFileHandler.loadFromFile(filePath, messageClass);
+        mockMessages = Arrays.asList(testMessage1, testMessage2);
+        when(mockJsonFileHandler.loadFromFile(eq(filePath), eq(messageClass)))
+                .thenReturn(mockMessages);
 
         // Create repository with mocked dependencies
         messageRepository = new MessageRepository(mockJsonFileHandler, filePath);
     }
 
-    void verifyMessageInList(Message message, List<Message> messages) {
-        assertNotNull(messages);
-        assertTrue(messages.contains(message));
-    }
-
-    @Test
-    void verifyMessages_ShouldLoadMessagesFromFile() {
-        // Assert
-        verifyMessageInList(testMessage1, mockMessages);
-        verifyMessageInList(testMessage2, mockMessages);
+    @AfterEach
+    void cleanUp() {
+        File file = new File("data/test/messages.json");
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
     @Test
@@ -88,7 +89,7 @@ public class MessageRepositoryTest {
         Message result = messageRepository.getMessageDetails("msg-1");
 
         // Assert
-        assertEquals(result, testMessage1);
+        assertEquals(testMessage1, result);
     }
 
     @Test
@@ -132,13 +133,13 @@ public class MessageRepositoryTest {
     @Test
     void deleteMessage_WithExistingMessage_ShouldDeleteAndReturnTrue() throws IOException {
         // Act
-        boolean result = messageRepository.deleteMessage("msg-1");
+        boolean result = messageRepository.deleteMessage(testMessage1.getGuid());
 
         // Assert
         assertTrue(result);
 
         // Verify message was removed
-        Message deletedMessage = messageRepository.getMessageDetails("msg-1");
+        Message deletedMessage = messageRepository.getMessageDetails(testMessage1.getGuid());
         assertNull(deletedMessage);
     }
 

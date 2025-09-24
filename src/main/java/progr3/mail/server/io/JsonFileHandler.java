@@ -26,9 +26,15 @@ public class JsonFileHandler implements IJsonFileHandler {
         lock.writeLock().lock();
         try {
             File file = new File(filename);
+
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            }
+
             List<T> data;
 
-            if (file.exists() && file.length() > 0) {
+            if (file.length() > 0) {
                 data = loadFromFile(filename, clazz);
             } else {
                 data = new ArrayList<>();
@@ -47,7 +53,18 @@ public class JsonFileHandler implements IJsonFileHandler {
         List<T> result = List.of();
         lock.readLock().lock();
         try {
-            result = mapper.readValue(new File(filename),
+            File file = new File(filename);
+
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            }
+
+            if (file.length() == 0) {
+                return new ArrayList<>();
+            }
+
+            result = mapper.readValue(file,
                     mapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } finally {
             lock.readLock().unlock();
@@ -60,6 +77,10 @@ public class JsonFileHandler implements IJsonFileHandler {
         lock.writeLock().lock();
         try {
             File file = new File(filename);
+            if (!file.exists()) {
+                return;
+            }
+
             List<T> data;
 
             if (file.exists() && file.length() > 0) {

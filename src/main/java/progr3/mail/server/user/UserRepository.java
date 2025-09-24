@@ -39,12 +39,12 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public User getUserDetailsById(String userId) {
+    public User getUserById(String userId) {
         return usersById.get(userId);
     }
 
     @Override
-    public User getUserDetailsByEmail(String email) {
+    public User getUserByEmail(String email) {
         return usersByEmail.get(email);
     }
 

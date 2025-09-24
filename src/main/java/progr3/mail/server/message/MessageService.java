@@ -21,10 +21,45 @@ public class MessageService {
         this.userRepository = userRepository;
     }
 
+    private class Validator {
+        public static boolean isValidEmail(String email) {
+            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+            return email != null && email.matches(emailRegex);
+        }
+
+        public static boolean isValidSubject(String subject) {
+            return subject != null && !subject.trim().isEmpty() && subject.length() <= 255;
+        }
+
+        public static boolean isValidBody(String body) {
+            return body != null && !body.trim().isEmpty();
+        }
+
+        public static boolean isValidUserId(String userId) {
+            return userId != null && !userId.trim().isEmpty();
+        }
+
+        public static boolean isValidMessageId(String messageId) {
+            return messageId != null && !messageId.trim().isEmpty();
+        }
+
+        public static boolean areValidRecipients(List<String> recipients) {
+            if (recipients == null || recipients.isEmpty()) {
+                return false;
+            }
+            for (String email : recipients) {
+                if (!isValidEmail(email)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
 
         for (String recipientUser : recipientsUserEmails) {
-            if (userRepository.getUserDetailsByEmail(recipientUser) == null) {
+            if (userRepository.getUserByEmail(recipientUser) == null) {
                 logger.logError("Recipient user not found: " + recipientUser, null);
                 return null;
             }
@@ -67,6 +102,7 @@ public class MessageService {
 
     public boolean forwardMessage(String forwarderUserId, String messageId,
             List<String> recipientsUserEmails) {
+
         var originalMessage = messageRepository.getMessageDetails(messageId);
         originalMessage.setIsForwarded(IsForwarded.YES);
         originalMessage.setSenderUserGUID(forwarderUserId);
@@ -77,14 +113,44 @@ public class MessageService {
     }
 
     public List<Message> getAllUserMessages(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            logger.logError("User ID is null", null);
+            return List.of();
+        }
+
+        if (userRepository.getUserById(userId) == null) {
+            logger.logError("User not found: " + userId, null);
+            return List.of();
+        }
+
         return messageRepository.getAllMessages(userId);
     };
 
     public Message getMessageDetails(String messageId) {
+        if (messageId == null || messageId.isEmpty()) {
+            logger.logError("Message ID is null", null);
+            return null;
+        }
+
+        if (messageRepository.getMessageDetails(messageId) == null) {
+            logger.logError("Message not found: " + messageId, null);
+            return null;
+        }
+
         return messageRepository.getMessageDetails(messageId);
     }
 
     public boolean deleteMessage(String messageId) {
+        if (messageId == null || messageId.isEmpty()) {
+            logger.logError("Message ID is null", null);
+            return false;
+        }
+
+        if (messageRepository.getMessageDetails(messageId) == null) {
+            logger.logError("Message not found: " + messageId, null);
+            return false;
+        }
+
         return messageRepository.deleteMessage(messageId);
     }
 

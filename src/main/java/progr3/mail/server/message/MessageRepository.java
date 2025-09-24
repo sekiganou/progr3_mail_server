@@ -35,33 +35,6 @@ public class MessageRepository implements IMessageRepository {
         }
     }
 
-    private boolean saveMessageToFile(Message message) {
-        try {
-            jsonFileHandler.saveToFile(message, filePath, Message.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private boolean deleteMessageFromFile(Message message) {
-        if (message == null)
-            return false;
-
-        var messageExists = messagesById.get(message.getGuid()) != null;
-        if (!messageExists)
-            return false;
-
-        try {
-            jsonFileHandler.removeFromFile(message, filePath, Message.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     @Override
     public List<Message> getAllMessages(String userId) {
         return messagesByUserId.getOrDefault(userId, new ArrayList<>());
@@ -77,15 +50,37 @@ public class MessageRepository implements IMessageRepository {
         if (messagesById.get(message.getGuid()) != null) {
             return false;
         }
-        messagesById.put(message.getGuid(), message);
-        return saveMessageToFile(message);
+
+        try {
+            messagesById.put(message.getGuid(), message);
+            jsonFileHandler.saveToFile(message, filePath, Message.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
     }
 
     @Override
     public boolean deleteMessage(String messageId) {
-        Message message = messagesById.get(messageId);
+        if (messageId == null)
+            return false;
+
+        var message = messagesById.get(messageId);
+
+        if (message == null)
+            return false;
+
         messagesById.remove(messageId);
-        return deleteMessageFromFile(message);
+
+        try {
+            jsonFileHandler.removeFromFile(message, filePath, Message.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }

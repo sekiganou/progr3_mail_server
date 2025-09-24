@@ -7,7 +7,7 @@ import progr3.mail.server.model.User;
 public interface IUserRepository {
     List<User> getAllUsers();
 
-    User getUserDetailsById(String userId);
+    User getUserById(String userId);
 
-    User getUserDetailsByEmail(String email);
+    User getUserByEmail(String email);
 }
