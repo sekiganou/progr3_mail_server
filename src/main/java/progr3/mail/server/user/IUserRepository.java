@@ -10,4 +10,6 @@ public interface IUserRepository {
     User getUserById(String userId);
 
     User getUserByEmail(String email);
+
+    boolean saveUser(User user);
 }

@@ -1,5 +1,6 @@
 package progr3.mail.server.message;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import progr3.mail.server.app.ILogger;
@@ -19,41 +20,6 @@ public class MessageService {
         this.logger = logger;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
-    }
-
-    private class Validator {
-        public static boolean isValidEmail(String email) {
-            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-            return email != null && email.matches(emailRegex);
-        }
-
-        public static boolean isValidSubject(String subject) {
-            return subject != null && !subject.trim().isEmpty() && subject.length() <= 255;
-        }
-
-        public static boolean isValidBody(String body) {
-            return body != null && !body.trim().isEmpty();
-        }
-
-        public static boolean isValidUserId(String userId) {
-            return userId != null && !userId.trim().isEmpty();
-        }
-
-        public static boolean isValidMessageId(String messageId) {
-            return messageId != null && !messageId.trim().isEmpty();
-        }
-
-        public static boolean areValidRecipients(List<String> recipients) {
-            if (recipients == null || recipients.isEmpty()) {
-                return false;
-            }
-            for (String email : recipients) {
-                if (!isValidEmail(email)) {
-                    return false;
-                }
-            }
-            return true;
-        }
     }
 
     public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
@@ -76,6 +42,12 @@ public class MessageService {
     public String replySingleToMessage(String senderUserId, String messageId, String subject,
             String body) {
         var originalMessage = messageRepository.getMessageDetails(messageId);
+
+        if (originalMessage == null) {
+            logger.logError("Original message not found: " + messageId, null);
+            return null;
+        }
+
         var messageReply = MessageConstructor.create(
                 senderUserId,
                 List.of(originalMessage.getSenderUserGUID()),
@@ -88,39 +60,52 @@ public class MessageService {
     public String replyAllToMessage(String senderUserId, String messageId,
             String subject, String body) {
         var originalMessage = messageRepository.getMessageDetails(messageId);
-        var recipients = originalMessage.getRecipientsUserGUIDs();
-        recipients.add(originalMessage.getSenderUserGUID());
+
+        if (originalMessage == null) {
+            logger.logError("Original message not found: " + messageId, null);
+            return null;
+        }
+
+        var recipients = new ArrayList<>(originalMessage.getRecipientsUserGUIDs());
+        if (!recipients.add(originalMessage.getSenderUserGUID()))
+            return null;
+
         var messageReply = MessageConstructor.create(
                 senderUserId,
                 recipients,
                 subject,
                 body);
 
-        ;
         return messageRepository.saveMessage(messageReply) ? messageReply.getGuid() : null;
     }
 
-    public boolean forwardMessage(String forwarderUserId, String messageId,
+    public String forwardMessage(String forwarderUserId, String messageId,
             List<String> recipientsUserEmails) {
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
-        originalMessage.setIsForwarded(IsForwarded.YES);
-        originalMessage.setSenderUserGUID(forwarderUserId);
-        originalMessage.setRecipientsUserGUIDs(recipientsUserEmails);
 
-        return messageRepository.saveMessage(originalMessage);
+        if (originalMessage == null) {
+            logger.logError("Original message not found: " + messageId, null);
+            return null;
+        }
+        var newMessage = MessageConstructor.copyFrom(originalMessage);
+        newMessage.setSenderUserGUID(forwarderUserId);
+        newMessage.setRecipientsUserGUIDs(recipientsUserEmails);
+        newMessage.setIsForwarded(IsForwarded.YES);
+
+        return messageRepository.saveMessage(newMessage) ? newMessage.getGuid() : null;
 
     }
 
     public List<Message> getAllUserMessages(String userId) {
         if (userId == null || userId.isEmpty()) {
             logger.logError("User ID is null", null);
-            return List.of();
+            return new ArrayList<>();
         }
 
         if (userRepository.getUserById(userId) == null) {
             logger.logError("User not found: " + userId, null);
-            return List.of();
+            return new ArrayList<>();
         }
 
         return messageRepository.getAllMessages(userId);

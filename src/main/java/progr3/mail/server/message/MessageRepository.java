@@ -22,7 +22,7 @@ public class MessageRepository implements IMessageRepository {
     }
 
     private void loadMessagesFromFile() {
-        List<Message> messages = List.of();
+        List<Message> messages = new ArrayList<>();
         try {
             messages = jsonFileHandler.loadFromFile(filePath, Message.class);
             for (Message message : messages) {
@@ -53,6 +53,8 @@ public class MessageRepository implements IMessageRepository {
 
         try {
             messagesById.put(message.getGuid(), message);
+            messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
+                    .add(message);
             jsonFileHandler.saveToFile(message, filePath, Message.class);
             return true;
         } catch (Exception e) {

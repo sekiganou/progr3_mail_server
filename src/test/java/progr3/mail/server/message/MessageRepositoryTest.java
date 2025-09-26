@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,25 +13,21 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.Message;
 
-@ExtendWith(MockitoExtension.class)
 public class MessageRepositoryTest {
-    @Mock
-    private JsonFileHandler mockJsonFileHandler;
+    private JsonFileHandler jsonFileHandler = new JsonFileHandler();
 
     private MessageRepository messageRepository;
     private Message testMessage1;
     private Message testMessage2;
-    private List<Message> mockMessages;
+    String filePath = "data/test/messages.json";
 
     @BeforeEach
     void setUp() throws IOException {
+
         // Setup test messages
         testMessage1 = MessageConstructor.create("user-1",
                 Arrays.asList("user-2@test.com"), "Test Subject 1", "Test Body 1");
@@ -42,24 +36,18 @@ public class MessageRepositoryTest {
 
         testMessage1.setGuid("msg-1");
         testMessage2.setGuid("msg-2");
-        String filePath = "data/test/messages.json";
         Class<Message> messageClass = Message.class;
 
-        mockJsonFileHandler.saveToFile(testMessage1, filePath, messageClass);
-        mockJsonFileHandler.saveToFile(testMessage2, filePath, messageClass);
-
-        // Mock the file loading
-        mockMessages = Arrays.asList(testMessage1, testMessage2);
-        when(mockJsonFileHandler.loadFromFile(eq(filePath), eq(messageClass)))
-                .thenReturn(mockMessages);
+        jsonFileHandler.saveToFile(testMessage1, filePath, messageClass);
+        jsonFileHandler.saveToFile(testMessage2, filePath, messageClass);
 
         // Create repository with mocked dependencies
-        messageRepository = new MessageRepository(mockJsonFileHandler, filePath);
+        messageRepository = new MessageRepository(jsonFileHandler, filePath);
     }
 
     @AfterEach
     void cleanUp() {
-        File file = new File("data/test/messages.json");
+        File file = new File(filePath);
         if (file.exists()) {
             file.delete();
         }

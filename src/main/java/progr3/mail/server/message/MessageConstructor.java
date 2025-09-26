@@ -19,4 +19,16 @@ public class MessageConstructor {
         return message;
     }
 
+    public static Message copyFrom(Message message) {
+        var newMessage = new Message();
+        newMessage.setSenderUserGUID(message.getSenderUserGUID());
+        newMessage.setRecipientsUserGUIDs(message.getRecipientsUserGUIDs());
+        newMessage.setSubject(message.getSubject());
+        newMessage.setBody(message.getBody());
+        newMessage.setGuid(UUID.randomUUID().toString());
+        newMessage.setDate(new java.util.Date());
+        newMessage.setIsForwarded(message.getIsForwarded());
+        return newMessage;
+    }
+
 }

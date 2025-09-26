@@ -1,5 +1,6 @@
 package progr3.mail.server.user;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class UserRepository implements IUserRepository {
     }
 
     private void loadUsersFromFile() {
-        List<User> users = List.of();
+        List<User> users = new ArrayList<>();
         try {
             users = jsonFileHandler.loadFromFile(filePath, User.class);
             for (User user : users) {
@@ -31,6 +32,24 @@ public class UserRepository implements IUserRepository {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean saveUser(User user) {
+        if (usersById.get(user.getGuid()) != null) {
+            return false;
+        }
+
+        try {
+            usersById.put(user.getGuid(), user);
+            usersByEmail.put(user.getEmail(), user);
+            jsonFileHandler.saveToFile(user, filePath, User.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
     }
 
     @Override

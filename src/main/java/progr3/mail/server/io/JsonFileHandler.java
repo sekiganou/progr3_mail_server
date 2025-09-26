@@ -50,7 +50,7 @@ public class JsonFileHandler implements IJsonFileHandler {
 
     public <T> List<T> loadFromFile(String filename, Class<T> clazz) throws IOException {
         ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
-        List<T> result = List.of();
+        List<T> result = new ArrayList<>();
         lock.readLock().lock();
         try {
             File file = new File(filename);

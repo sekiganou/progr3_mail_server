@@ -3,14 +3,8 @@ package progr3.mail.server.message;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,50 +14,46 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 
 import progr3.mail.server.app.Logger;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.Message;
+import progr3.mail.server.model.User;
+import progr3.mail.server.user.UserConstructor;
 import progr3.mail.server.user.UserRepository;
 
 public class MessageServiceTest {
-    @Mock
-    private JsonFileHandler mockJsonFileHandler;
+    private JsonFileHandler jsonFileHandler = new JsonFileHandler();
 
     private MessageService messageService;
     private Message testMessage1;
     private Message testMessage2;
     private String userFile = "data/test/users.json";
     private String messageFile = "data/test/messages.json";
-    private List<Message> mockMessages;
+    private User testUser1;
+    private User testUser2;
+
+    private MessageRepository messageRepository = new MessageRepository(jsonFileHandler, messageFile);
+    private UserRepository userRepository = new UserRepository(jsonFileHandler, userFile);
+    private Logger logger = new Logger();
 
     @BeforeEach
     void setUp() throws IOException {
+
+        testUser1 = UserConstructor.create("user-1@test.com", "user-1");
+        testUser2 = UserConstructor.create("user-2@test.com", "user-2");
         // Setup test messages
-        testMessage1 = MessageConstructor.create("user-1",
-                Arrays.asList("user-2@test.com"), "Test Subject 1", "Test Body 1");
-        testMessage2 = MessageConstructor.create("user-2",
-                Arrays.asList("user-1@test.com"), "Test Subject 2", "Test Body 2");
+        testMessage1 = MessageConstructor.create(testUser1.getGuid(),
+                Arrays.asList(testUser1.getEmail()), "Test Subject 1", "Test Body 1");
+        testMessage2 = MessageConstructor.create(testUser2.getGuid(),
+                Arrays.asList(testUser2.getEmail()), "Test Subject 2", "Test Body 2");
 
-        testMessage1.setGuid("msg-1");
-        testMessage2.setGuid("msg-2");
-        String messageFile = "data/test/messages.json";
-        Class<Message> messageClass = Message.class;
+        userRepository.saveUser(testUser1);
+        userRepository.saveUser(testUser2);
 
-        mockJsonFileHandler.saveToFile(testMessage1, messageFile, messageClass);
-        mockJsonFileHandler.saveToFile(testMessage2, messageFile, messageClass);
+        messageRepository.saveMessage(testMessage1);
+        messageRepository.saveMessage(testMessage2);
 
-        // Mock the file loading
-        mockMessages = Arrays.asList(testMessage1, testMessage2);
-        when(mockJsonFileHandler.loadFromFile(eq(messageFile), eq(messageClass)))
-                .thenReturn(mockMessages);
-
-        // Create repository with mocked dependencies
-        var messageRepository = new MessageRepository(mockJsonFileHandler, messageFile);
-        var userRepository = new UserRepository(mockJsonFileHandler, userFile);
-        var logger = new Logger();
         messageService = new MessageService(logger, messageRepository, userRepository);
     }
 
@@ -83,8 +73,8 @@ public class MessageServiceTest {
     @Test
     void sendMessage_WithValidRecipients_ShouldCreateAndSaveMessage() {
         // Arrange
-        String senderUserId = "user-1";
-        List<String> recipientEmails = Arrays.asList("user2@test.com");
+        String senderUserId = testUser1.getGuid();
+        List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
         String subject = "Test Send Subject";
         String body = "Test Send Body";
 
@@ -106,8 +96,8 @@ public class MessageServiceTest {
     @Test
     void sendMessage_WithMultipleValidRecipients_ShouldCreateAndSaveMessages() {
         // Arrange
-        String senderUserId = "user-1";
-        List<String> recipientEmails = Arrays.asList("user2@test.com", "user1@test.com");
+        String senderUserId = testUser1.getGuid();
+        List<String> recipientEmails = Arrays.asList(testUser2.getEmail(), testUser2.getEmail());
         String subject = "Test Multiple Send Subject";
         String body = "Test Multiple Send Body";
 
@@ -129,7 +119,7 @@ public class MessageServiceTest {
     @Test
     void sendMessage_WithInvalidRecipient_ShouldReturnNull() {
         // Arrange
-        String senderUserId = "user-1";
+        String senderUserId = testUser1.getGuid();
         List<String> recipientEmails = Arrays.asList("invalid@test.com");
         String subject = "Test Subject";
         String body = "Test Body";
@@ -144,8 +134,8 @@ public class MessageServiceTest {
     @Test
     void sendMessage_WithMultipleRecipientsOneInvalid_ShouldReturnNull() {
         // Arrange
-        String senderUserId = "user-1";
-        List<String> recipientEmails = Arrays.asList("user2@test.com", "invalid@test.com");
+        String senderUserId = testUser1.getGuid();
+        List<String> recipientEmails = Arrays.asList(testUser2.getEmail(), "invalid@test.com");
 
         // Act
         String resultMessageId = messageService.sendMessage(senderUserId, recipientEmails, "Subject", "Body");
@@ -157,8 +147,8 @@ public class MessageServiceTest {
     @Test
     void replySingleToMessage_WithValidMessage_ShouldCreateReply() {
         // Arrange
-        String senderUserId = "user-2";
-        String originalMessageId = "msg-1";
+        String senderUserId = testUser2.getGuid();
+        String originalMessageId = testMessage1.getGuid();
         String subject = "Re: Original Subject";
         String body = "Reply body";
 
@@ -171,7 +161,8 @@ public class MessageServiceTest {
         Message replyMessage = messageService.getMessageDetails(result);
 
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertEquals(Arrays.asList("user-1"), replyMessage.getRecipientsUserGUIDs()); // Reply to original sender
+        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserGUIDs()); // Reply to original
+                                                                                                 // sender
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
@@ -179,7 +170,7 @@ public class MessageServiceTest {
     @Test
     void replySingleToMessage_WhenOriginalMessageNotFound_ShouldReturnNull() {
         // Arrange
-        String senderUserId = "user-2";
+        String senderUserId = testUser2.getGuid();
         String originalMessageId = "msg-3"; // Non-existent message ID
         String subject = "Re: Original Subject";
         String body = "Reply body";
@@ -191,41 +182,179 @@ public class MessageServiceTest {
 
     @Test
     void replyAllToMessage_WithValidMessage_ShouldCreateReply() {
+        // Arrange
+        String senderUserId = testUser2.getGuid();
+        String originalMessageId = testMessage1.getGuid();
+        String subject = "Re: Original Subject";
+        String body = "Reply All body";
 
+        // Act
+        String result = messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
+
+        // Assert
+        assertNotNull(result);
+
+        Message replyMessage = messageService.getMessageDetails(result);
+        assertEquals(senderUserId, replyMessage.getSenderUserGUID());
+        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getGuid()));
+        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getEmail()));
+        assertEquals(subject, replyMessage.getSubject());
+        assertEquals(body, replyMessage.getBody());
     }
 
     @Test
     void replyAllToMessage_WhenOriginalMessageNotFound_ShouldReturnNull() {
+        // Arrange
+        String senderUserId = testUser2.getGuid();
+        String originalMessageId = "non-existent-msg-id";
+        String subject = "Re: Original Subject";
+        String body = "Reply All body";
+
+        // Act
+        String result = messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
+
+        // Assert
+        assertNull(result);
     }
 
     @Test
     void forwardMessage_WithValidRecipients_ShouldCreateForward() {
+        // Arrange
+        String forwarderUserId = testUser2.getGuid();
+        String originalMessageId = testMessage1.getGuid();
+        List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
+
+        // Act
+        String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
+
+        // Assert
+        assertNotNull(resultId);
+
+        Message forwardedMessage = messageService.getMessageDetails(resultId);
+        assertEquals(forwarderUserId, forwardedMessage.getSenderUserGUID());
+        assertEquals(recipientEmails, forwardedMessage.getRecipientsUserGUIDs());
+        assertEquals(Message.IsForwarded.YES, forwardedMessage.getIsForwarded());
     }
 
     @Test
     void forwardMessage_WithInValidRecipients_ShouldReturnFalse() {
+        // Arrange
+        String forwarderUserId = testUser2.getGuid();
+        String originalMessageId = "non-existent-msg-id";
+        List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
+
+        // Act
+        String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
+
+        // Assert
+        assertNull(resultId);
     }
 
     @Test
     void getAllUserMessages_WithValidUser_ShouldGetAllMessages() {
+        // Arrange
+        String userId = testUser1.getGuid();
+
+        // Act
+        List<Message> result = messageService.getAllUserMessages(userId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
+        assertEquals(testUser1.getGuid(), result.get(0).getSenderUserGUID());
     }
 
     @Test
-    void getAllUserMessages_WithInvalidUser_() {
+    void getAllUserMessages_WithInvalidUser_ShouldReturnEmptyList() {
+        // Arrange
+        String invalidUserId = "non-existent-user-id";
+
+        // Act
+        List<Message> result = messageService.getAllUserMessages(invalidUserId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    void getMessageDetails_ShouldThrowUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> {
-            messageService.getMessageDetails("msg-1");
-        });
+    void getMessageDetails_WithValidMessageId_ShouldReturnMessage() {
+        // Arrange
+        String messageId = testMessage1.getGuid();
+
+        // Act
+        Message result = messageService.getMessageDetails(messageId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(testMessage1.getGuid(), result.getGuid());
+        assertEquals(testMessage1.getSenderUserGUID(), result.getSenderUserGUID());
+        assertEquals(testMessage1.getSubject(), result.getSubject());
+        assertEquals(testMessage1.getBody(), result.getBody());
     }
 
     @Test
-    void deleteMessage_ShouldThrowUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> {
-            messageService.deleteMessage("msg-1");
-        });
+    void getMessageDetails_WithInvalidMessageId_ShouldReturnNull() {
+        // Arrange
+        String invalidMessageId = "non-existent-message-id";
+
+        // Act
+        Message result = messageService.getMessageDetails(invalidMessageId);
+
+        // Assert
+        assertNull(result);
     }
 
+    @Test
+    void getMessageDetails_WithNullMessageId_ShouldReturnNull() {
+        // Arrange
+        String nullMessageId = null;
+
+        // Act
+        Message result = messageService.getMessageDetails(nullMessageId);
+
+        // Assert
+        assertNull(result);
+    }
+
+    @Test
+    void deleteMessage_WithValidMessageId_ShouldReturnTrue() {
+        // Arrange
+        String messageId = testMessage1.getGuid();
+
+        // Act
+        boolean result = messageService.deleteMessage(messageId);
+
+        // Assert
+        assertTrue(result);
+
+        // Verify message is actually deleted
+        Message deletedMessage = messageService.getMessageDetails(messageId);
+        assertNull(deletedMessage);
+    }
+
+    @Test
+    void deleteMessage_WithInvalidMessageId_ShouldReturnFalse() {
+        // Arrange
+        String invalidMessageId = "non-existent-message-id";
+
+        // Act
+        boolean result = messageService.deleteMessage(invalidMessageId);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void deleteMessage_WithNullMessageId_ShouldReturnFalse() {
+        // Arrange
+        String nullMessageId = null;
+
+        // Act
+        boolean result = messageService.deleteMessage(nullMessageId);
+
+        // Assert
+        assertFalse(result);
+    }
 }
