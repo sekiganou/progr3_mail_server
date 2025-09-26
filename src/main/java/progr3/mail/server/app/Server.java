@@ -3,6 +3,8 @@ package progr3.mail.server.app;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import progr3.mail.server.log.ILogger;
+
 public class Server {
 
     private final ILogger logger;

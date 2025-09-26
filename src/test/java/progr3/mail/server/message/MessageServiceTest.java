@@ -15,8 +15,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import progr3.mail.server.app.Logger;
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.User;
 import progr3.mail.server.user.UserConstructor;

@@ -1,4 +1,4 @@
-package progr3.mail.server.app;
+package progr3.mail.server.log;
 
 public interface ILogger {
     void logInfo(String message);

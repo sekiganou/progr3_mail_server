@@ -3,7 +3,7 @@ package progr3.mail.server.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import progr3.mail.server.app.ILogger;
+import progr3.mail.server.log.ILogger;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Message.IsForwarded;
 import progr3.mail.server.user.IUserRepository;

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
+import progr3.mail.server.log.ILogger;
+
 public class ClientHandler implements Runnable {
 
     private ILogger logger;

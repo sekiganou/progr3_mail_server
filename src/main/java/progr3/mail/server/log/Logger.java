@@ -1,4 +1,4 @@
-package progr3.mail.server.app;
+package progr3.mail.server.log;
 
 public class Logger implements ILogger {
     private LogLevel currentLogLevel = LogLevel.INFO;
