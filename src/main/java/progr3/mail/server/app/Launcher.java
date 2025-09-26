@@ -31,7 +31,7 @@ public class Launcher {
         repository.saveMessage(testMessage2);
 
         System.out.println("Messages for user-1:");
-        var messages = repository.getAllMessages("user-1");
+        var messages = repository.getAllUserMessages("user-1");
         messages.forEach(msg -> System.out.println(msg.getSubject()));
     }
 }

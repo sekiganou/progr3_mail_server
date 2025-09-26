@@ -56,7 +56,7 @@ public class MessageRepositoryTest {
     @Test
     void getAllMessage_WithValidUserId_ShouldReturnMessage() {
         // Act
-        List<Message> result = messageRepository.getAllMessages("user-1");
+        List<Message> result = messageRepository.getAllUserMessages("user-1");
 
         // Assert
         assertEquals(1, result.size());
@@ -65,7 +65,7 @@ public class MessageRepositoryTest {
 
     @Test
     void getAllMessage_WithInvalidUserId_ShouldReturnMessage() {
-        List<Message> messages = messageRepository.getAllMessages("invalid-user");
+        List<Message> messages = messageRepository.getAllUserMessages("invalid-user");
 
         // Assert
         assertEquals(0, messages.size());

@@ -36,7 +36,7 @@ public class MessageRepository implements IMessageRepository {
     }
 
     @Override
-    public List<Message> getAllMessages(String userId) {
+    public List<Message> getAllUserMessages(String userId) {
         return messagesByUserId.getOrDefault(userId, new ArrayList<>());
     }
 

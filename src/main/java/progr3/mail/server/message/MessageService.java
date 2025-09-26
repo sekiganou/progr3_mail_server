@@ -108,7 +108,7 @@ public class MessageService {
             return new ArrayList<>();
         }
 
-        return messageRepository.getAllMessages(userId);
+        return messageRepository.getAllUserMessages(userId);
     };
 
     public Message getMessageDetails(String messageId) {
