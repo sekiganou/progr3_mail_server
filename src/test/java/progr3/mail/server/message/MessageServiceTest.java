@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.Logger;
@@ -23,22 +25,27 @@ import progr3.mail.server.user.UserConstructor;
 import progr3.mail.server.user.UserRepository;
 
 public class MessageServiceTest {
-    private JsonFileHandler jsonFileHandler = new JsonFileHandler();
+    private JsonFileHandler jsonFileHandler;
+
+    @TempDir
+    private Path tempDir;
 
     private MessageService messageService;
     private Message testMessage1;
     private Message testMessage2;
-    private String userFile = "data/test/users.json";
-    private String messageFile = "data/test/messages.json";
     private User testUser1;
     private User testUser2;
 
-    private MessageRepository messageRepository = new MessageRepository(jsonFileHandler, messageFile);
-    private UserRepository userRepository = new UserRepository(jsonFileHandler, userFile);
+    private MessageRepository messageRepository;
+    private UserRepository userRepository;
     private Logger logger = new Logger();
 
     @BeforeEach
     void setUp() throws IOException {
+        jsonFileHandler = new JsonFileHandler();
+
+        String messageFile = tempDir.resolve("messages.json").toString();
+        String userFile = tempDir.resolve("users.json").toString();
 
         testUser1 = UserConstructor.create("user-1@test.com", "user-1");
         testUser2 = UserConstructor.create("user-2@test.com", "user-2");
@@ -47,6 +54,9 @@ public class MessageServiceTest {
                 Arrays.asList(testUser1.getEmail()), "Test Subject 1", "Test Body 1");
         testMessage2 = MessageConstructor.create(testUser2.getGuid(),
                 Arrays.asList(testUser2.getEmail()), "Test Subject 2", "Test Body 2");
+
+        messageRepository = new MessageRepository(jsonFileHandler, messageFile);
+        userRepository = new UserRepository(jsonFileHandler, userFile);
 
         userRepository.saveUser(testUser1);
         userRepository.saveUser(testUser2);
@@ -57,18 +67,18 @@ public class MessageServiceTest {
         messageService = new MessageService(logger, messageRepository, userRepository);
     }
 
-    @AfterEach
-    void cleanUp() {
-        File file = new File(messageFile);
-        if (file.exists()) {
-            file.delete();
-        }
+    // @AfterEach
+    // void cleanUp() {
+    // File file = new File(messageFile);
+    // if (file.exists()) {
+    // file.delete();
+    // }
 
-        file = new File(userFile);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
+    // file = new File(userFile);
+    // if (file.exists()) {
+    // file.delete();
+    // }
+    // }
 
     @Test
     void sendMessage_WithValidRecipients_ShouldCreateAndSaveMessage() {

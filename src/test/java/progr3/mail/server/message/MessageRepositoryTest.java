@@ -7,26 +7,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.Message;
 
 public class MessageRepositoryTest {
-    private JsonFileHandler jsonFileHandler = new JsonFileHandler();
+    private JsonFileHandler jsonFileHandler;
+
+    @TempDir
+    private Path tempDir;
 
     private MessageRepository messageRepository;
     private Message testMessage1;
     private Message testMessage2;
-    String filePath = "data/test/messages.json";
 
     @BeforeEach
     void setUp() throws IOException {
+        jsonFileHandler = new JsonFileHandler();
+
+        String filePath = tempDir.resolve("messages.json").toString();
 
         // Setup test messages
         testMessage1 = MessageConstructor.create("user-1",
@@ -45,13 +52,13 @@ public class MessageRepositoryTest {
         messageRepository = new MessageRepository(jsonFileHandler, filePath);
     }
 
-    @AfterEach
-    void cleanUp() {
-        File file = new File(filePath);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
+    // @AfterEach
+    // void cleanUp() {
+    // File file = new File(filePath);
+    // if (file.exists()) {
+    // file.delete();
+    // }
+    // }
 
     @Test
     void getAllMessage_WithValidUserId_ShouldReturnMessage() {

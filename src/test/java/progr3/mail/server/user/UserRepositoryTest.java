@@ -5,25 +5,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.User;
 
 public class UserRepositoryTest {
-    private JsonFileHandler jsonFileHandler = new JsonFileHandler();
+    private JsonFileHandler jsonFileHandler;
+
+    @TempDir
+    private Path tempDir;
 
     private UserRepository userRepository;
     private User testUser1;
     private User testUser2;
-    String filePath = "data/test/users.json";
 
     @BeforeEach
     void setUp() throws IOException {
+        jsonFileHandler = new JsonFileHandler();
+
+        String filePath = tempDir.resolve("users.json").toString();
 
         // Setup test messages
         testUser1 = UserConstructor.create("user-1@test.com", "user-1");
@@ -38,13 +45,13 @@ public class UserRepositoryTest {
         userRepository = new UserRepository(jsonFileHandler, filePath);
     }
 
-    @AfterEach
-    void cleanUp() {
-        File file = new File(filePath);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
+    // @AfterEach
+    // void cleanUp() {
+    // File file = new File(filePath);
+    // if (file.exists()) {
+    // file.delete();
+    // }
+    // }
 
     @Test
     void getAllUsers_ShouldReturnAllUsers() {
