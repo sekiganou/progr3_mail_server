@@ -2,16 +2,16 @@ package progr3.mail.server.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.log.LogLevel;
+import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.User;
 
 public class UserServiceTest {
@@ -23,12 +23,17 @@ public class UserServiceTest {
     private UserService userService;
     private User testUser1;
     private User testUser2;
-
+    private Logger logger;
     private UserRepository userRepository;
 
     @BeforeEach
     void setUp() throws IOException {
         jsonFileHandler = new JsonFileHandler();
+        logger = new Logger(LogLevel.DEBUG,
+                tempDir.resolve("test.json").toString(),
+                false,
+                true,
+                jsonFileHandler);
 
         String userFile = tempDir.resolve("users.json").toString();
 
@@ -42,16 +47,8 @@ public class UserServiceTest {
         userRepository.saveUser(testUser1);
         userRepository.saveUser(testUser2);
 
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, logger);
     }
-
-    // @AfterEach
-    // void cleanUp() {
-    // File file = new File(userFile);
-    // if (file.exists()) {
-    // file.delete();
-    // }
-    // }
 
     @Test
     void getUserByEmail_WithValidEmail_ShouldReturnUser() {

@@ -7,5 +7,4 @@ public interface ILogger {
 
     void logDebug(String message);
 
-    void setLogLevel(LogLevel level);
 }

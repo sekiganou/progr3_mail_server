@@ -14,15 +14,15 @@ public class MessageService {
     private IMessageRepository messageRepository;
     private IUserRepository userRepository;
 
-    public MessageService(ILogger logger,
-            IMessageRepository messageRepository,
-            IUserRepository userRepository) {
+    public MessageService(IMessageRepository messageRepository,
+            IUserRepository userRepository, ILogger logger) {
         this.logger = logger;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
     }
 
     public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
+        logger.logInfo("Sending message from user: " + senderUserId + " to recipients: " + recipientsUserEmails);
 
         for (String recipientUser : recipientsUserEmails) {
             if (userRepository.getUserByEmail(recipientUser) == null) {
@@ -41,6 +41,8 @@ public class MessageService {
 
     public String replySingleToMessage(String senderUserId, String messageId, String subject,
             String body) {
+        logger.logInfo("Replying to message: " + messageId + " from user: " + senderUserId);
+
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
         if (originalMessage == null) {
@@ -59,6 +61,8 @@ public class MessageService {
 
     public String replyAllToMessage(String senderUserId, String messageId,
             String subject, String body) {
+        logger.logInfo("Replying all to message: " + messageId + " from user: " + senderUserId);
+
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
         if (originalMessage == null) {
@@ -81,6 +85,8 @@ public class MessageService {
 
     public String forwardMessage(String forwarderUserId, String messageId,
             List<String> recipientsUserEmails) {
+        logger.logInfo("Forwarding message: " + messageId + " from user: " + forwarderUserId + " to recipients: "
+                + recipientsUserEmails);
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
@@ -98,6 +104,8 @@ public class MessageService {
     }
 
     public List<Message> getAllUserMessages(String userId) {
+        logger.logInfo("Retrieving all messages for user: " + userId);
+
         if (userId == null || userId.isEmpty()) {
             logger.logError("User ID is null", null);
             return new ArrayList<>();
@@ -112,6 +120,8 @@ public class MessageService {
     };
 
     public Message getMessageDetails(String messageId) {
+        logger.logInfo("Retrieving message details for message ID: " + messageId);
+
         if (messageId == null || messageId.isEmpty()) {
             logger.logError("Message ID is null", null);
             return null;
@@ -126,6 +136,8 @@ public class MessageService {
     }
 
     public boolean deleteMessage(String messageId) {
+        logger.logInfo("Deleting message with ID: " + messageId);
+
         if (messageId == null || messageId.isEmpty()) {
             logger.logError("Message ID is null", null);
             return false;

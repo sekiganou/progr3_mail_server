@@ -5,13 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -51,14 +49,6 @@ public class MessageRepositoryTest {
         // Create repository with mocked dependencies
         messageRepository = new MessageRepository(jsonFileHandler, filePath);
     }
-
-    // @AfterEach
-    // void cleanUp() {
-    // File file = new File(filePath);
-    // if (file.exists()) {
-    // file.delete();
-    // }
-    // }
 
     @Test
     void getAllMessage_WithValidUserId_ShouldReturnMessage() {

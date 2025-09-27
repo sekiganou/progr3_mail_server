@@ -6,18 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.log.LogLevel;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.User;
@@ -35,14 +34,18 @@ public class MessageServiceTest {
     private Message testMessage2;
     private User testUser1;
     private User testUser2;
-
+    private Logger logger;
     private MessageRepository messageRepository;
     private UserRepository userRepository;
-    private Logger logger = new Logger();
 
     @BeforeEach
     void setUp() throws IOException {
         jsonFileHandler = new JsonFileHandler();
+        logger = new Logger(LogLevel.DEBUG,
+                tempDir.resolve("test.json").toString(),
+                false,
+                true,
+                jsonFileHandler);
 
         String messageFile = tempDir.resolve("messages.json").toString();
         String userFile = tempDir.resolve("users.json").toString();
@@ -64,21 +67,8 @@ public class MessageServiceTest {
         messageRepository.saveMessage(testMessage1);
         messageRepository.saveMessage(testMessage2);
 
-        messageService = new MessageService(logger, messageRepository, userRepository);
+        messageService = new MessageService(messageRepository, userRepository, logger);
     }
-
-    // @AfterEach
-    // void cleanUp() {
-    // File file = new File(messageFile);
-    // if (file.exists()) {
-    // file.delete();
-    // }
-
-    // file = new File(userFile);
-    // if (file.exists()) {
-    // file.delete();
-    // }
-    // }
 
     @Test
     void sendMessage_WithValidRecipients_ShouldCreateAndSaveMessage() {
