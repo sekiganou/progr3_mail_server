@@ -70,7 +70,7 @@ public class MessageService {
             return null;
         }
 
-        var recipients = new ArrayList<>(originalMessage.getRecipientsUserGUIDs());
+        var recipients = new ArrayList<>(originalMessage.getRecipientsUserEmails());
         if (!recipients.add(originalMessage.getSenderUserGUID()))
             return null;
 
@@ -96,7 +96,7 @@ public class MessageService {
         }
         var newMessage = MessageConstructor.copyFrom(originalMessage);
         newMessage.setSenderUserGUID(forwarderUserId);
-        newMessage.setRecipientsUserGUIDs(recipientsUserEmails);
+        newMessage.setRecipientsUserEmails(recipientsUserEmails);
         newMessage.setIsForwarded(IsForwarded.YES);
 
         return messageRepository.saveMessage(newMessage) ? newMessage.getGuid() : null;

@@ -1,6 +1,6 @@
 package progr3.mail.server.log;
 
-public enum LogLevel {
+public enum LogLevelEnum {
     INFO,
     ERROR,
     DEBUG

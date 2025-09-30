@@ -16,16 +16,37 @@ public class UserService {
         logger.logInfo("Attempting login for email: " + email);
 
         var user = userRepository.getUserByEmail(email);
-        return user != null;
+        boolean loggedIn = user != null;
+
+        if (loggedIn) {
+            logger.logInfo("Login successful for email: " + email);
+        } else {
+            logger.logError("Login failed for email: " + email, null);
+        }
+
+        return loggedIn;
     }
 
     public User getUserById(String userId) {
         logger.logInfo("Retrieving user by ID: " + userId);
-        return userRepository.getUserById(userId);
+        var user = userRepository.getUserById(userId);
+
+        if (user == null) {
+            logger.logError("User not found with ID: " + userId, null);
+        }
+
+        return user;
     }
 
     public User getUserByEmail(String email) {
         logger.logInfo("Retrieving user by email: " + email);
-        return userRepository.getUserByEmail(email);
+
+        var user = userRepository.getUserByEmail(email);
+
+        if (user == null) {
+            logger.logError("User not found with email: " + email, null);
+        }
+
+        return user;
     }
 }

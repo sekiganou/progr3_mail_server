@@ -9,8 +9,16 @@ import java.util.Arrays;
 
 import javafx.application.Application;
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.log.LogLevelEnum;
+import progr3.mail.server.log.Logger;
+import progr3.mail.server.message.IMessageRepository;
 import progr3.mail.server.message.MessageConstructor;
 import progr3.mail.server.message.MessageRepository;
+import progr3.mail.server.message.MessageService;
+import progr3.mail.server.user.IUserRepository;
+import progr3.mail.server.user.UserConstructor;
+import progr3.mail.server.user.UserRepository;
+import progr3.mail.server.user.UserService;
 
 public class Launcher {
     public static void main(String[] args) {
@@ -20,18 +28,33 @@ public class Launcher {
 
         // server.start();
         var jsonFileHandler = new JsonFileHandler();
-        var repository = new MessageRepository(jsonFileHandler, "data/test/messages.json");
+        var messageRepo = new MessageRepository(jsonFileHandler, "data/test/messages.json");
+        var userRepo = new UserRepository(jsonFileHandler, "data/test/users.json");
 
-        var testMessage1 = MessageConstructor.create("user-1",
-                Arrays.asList("user-2@test.com"), "Test Subject 1", "Test Body 1");
-        var testMessage2 = MessageConstructor.create("user-2",
-                Arrays.asList("user-1@test.com"), "Test Subject 2", "Test Body 2");
+        var testUser1 = UserConstructor.create("user-1@test.com", "user-1");
+        var testUser2 = UserConstructor.create("user-2@test.com", "user-2");
 
-        repository.saveMessage(testMessage1);
-        repository.saveMessage(testMessage2);
+        var logger = new Logger(
+                LogLevelEnum.INFO, "data/test/logs.json", true, true,
+                jsonFileHandler);
+        var messageService = new MessageService(messageRepo, userRepo, logger);
+        var userService = new UserService(userRepo, logger);
 
-        System.out.println("Messages for user-1:");
-        var messages = repository.getAllUserMessages("user-1");
-        messages.forEach(msg -> System.out.println(msg.getSubject()));
+        userRepo.saveUser(testUser1);
+        userRepo.saveUser(testUser2);
+
+        logger.startScope();
+        userService.login(testUser1.getEmail());
+        logger.endScope();
+
+        logger.startScope();
+        messageService.getAllUserMessages(testUser1.getGuid());
+        logger.endScope();
+
+        logger.startScope();
+        messageService.sendMessage(testUser1.getGuid(), Arrays.asList(testUser2.getEmail()),
+                "Hello", "This is a test message.");
+        logger.endScope();
+
     }
 }

@@ -10,7 +10,7 @@ public class MessageConstructor {
     public static Message create(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
         var message = new Message();
         message.setSenderUserGUID(senderUserId);
-        message.setRecipientsUserGUIDs(recipientsUserEmails);
+        message.setRecipientsUserEmails(recipientsUserEmails);
         message.setSubject(subject);
         message.setBody(body);
         message.setGuid(UUID.randomUUID().toString());
@@ -22,7 +22,7 @@ public class MessageConstructor {
     public static Message copyFrom(Message message) {
         var newMessage = new Message();
         newMessage.setSenderUserGUID(message.getSenderUserGUID());
-        newMessage.setRecipientsUserGUIDs(message.getRecipientsUserGUIDs());
+        newMessage.setRecipientsUserEmails(message.getRecipientsUserEmails());
         newMessage.setSubject(message.getSubject());
         newMessage.setBody(message.getBody());
         newMessage.setGuid(UUID.randomUUID().toString());

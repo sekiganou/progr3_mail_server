@@ -5,12 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
-import progr3.mail.server.log.LogLevel;
+import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.User;
 
@@ -29,7 +30,7 @@ public class UserServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         jsonFileHandler = new JsonFileHandler();
-        logger = new Logger(LogLevel.DEBUG,
+        logger = new Logger(LogLevelEnum.DEBUG,
                 tempDir.resolve("test.json").toString(),
                 false,
                 true,
@@ -47,7 +48,14 @@ public class UserServiceTest {
         userRepository.saveUser(testUser1);
         userRepository.saveUser(testUser2);
 
+        logger.startScope();
+
         userService = new UserService(userRepository, logger);
+    }
+
+    @AfterEach
+    void cleanUp() {
+        logger.endScope();
     }
 
     @Test

@@ -11,12 +11,13 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import progr3.mail.server.io.JsonFileHandler;
-import progr3.mail.server.log.LogLevel;
+import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.User;
@@ -41,7 +42,7 @@ public class MessageServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         jsonFileHandler = new JsonFileHandler();
-        logger = new Logger(LogLevel.DEBUG,
+        logger = new Logger(LogLevelEnum.DEBUG,
                 tempDir.resolve("test.json").toString(),
                 false,
                 true,
@@ -67,7 +68,14 @@ public class MessageServiceTest {
         messageRepository.saveMessage(testMessage1);
         messageRepository.saveMessage(testMessage2);
 
+        logger.startScope();
+
         messageService = new MessageService(messageRepository, userRepository, logger);
+    }
+
+    @AfterEach
+    void cleanUp() {
+        logger.endScope();
     }
 
     @Test
@@ -86,7 +94,7 @@ public class MessageServiceTest {
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
         assertEquals(senderUserId, savedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, savedMessage.getRecipientsUserGUIDs());
+        assertEquals(recipientEmails, savedMessage.getRecipientsUserEmails());
         assertEquals(subject, savedMessage.getSubject());
         assertEquals(body, savedMessage.getBody());
         assertNotNull(savedMessage.getGuid());
@@ -109,7 +117,7 @@ public class MessageServiceTest {
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
         assertEquals(senderUserId, savedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, savedMessage.getRecipientsUserGUIDs());
+        assertEquals(recipientEmails, savedMessage.getRecipientsUserEmails());
         assertEquals(subject, savedMessage.getSubject());
         assertEquals(body, savedMessage.getBody());
         assertNotNull(savedMessage.getGuid());
@@ -161,8 +169,8 @@ public class MessageServiceTest {
         Message replyMessage = messageService.getMessageDetails(result);
 
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserGUIDs()); // Reply to original
-                                                                                                 // sender
+        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserEmails()); // Reply to original
+                                                                                                  // sender
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
@@ -196,8 +204,8 @@ public class MessageServiceTest {
 
         Message replyMessage = messageService.getMessageDetails(result);
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getGuid()));
-        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getEmail()));
+        assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getGuid()));
+        assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getEmail()));
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
@@ -232,7 +240,7 @@ public class MessageServiceTest {
 
         Message forwardedMessage = messageService.getMessageDetails(resultId);
         assertEquals(forwarderUserId, forwardedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, forwardedMessage.getRecipientsUserGUIDs());
+        assertEquals(recipientEmails, forwardedMessage.getRecipientsUserEmails());
         assertEquals(Message.IsForwarded.YES, forwardedMessage.getIsForwarded());
     }
 
