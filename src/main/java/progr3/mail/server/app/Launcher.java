@@ -40,8 +40,8 @@ public class Launcher {
         var messageService = new MessageService(messageRepo, userRepo, logger);
         var userService = new UserService(userRepo, logger);
 
-        userRepo.saveUser(testUser1);
-        userRepo.saveUser(testUser2);
+        // userRepo.saveUser(testUser1);
+        // userRepo.saveUser(testUser2);
 
         logger.startScope();
         userService.login(testUser1.getEmail());

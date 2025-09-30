@@ -7,7 +7,7 @@ import progr3.mail.server.log.ILogger;
 
 public class Server {
 
-    private final ILogger logger;
+    private ILogger logger;
 
     private final int N_WORKERS = 10;
     private final int PORT = 8080;
@@ -17,11 +17,15 @@ public class Server {
     }
 
     public void start() {
+        logger.startScope();
         logger.logInfo("Starting Mail Server...");
 
         Executor pool = Executors.newFixedThreadPool(N_WORKERS);
 
         logger.logInfo("Mail server started on port " + PORT);
+        logger.endScope();
+
+        logger.startScope();
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
             while (true) {
                 var clientSocket = serverSocket.accept();
@@ -30,6 +34,8 @@ public class Server {
             }
         } catch (Exception e) {
             logger.logError("Error in server socket operation", e);
+        } finally {
+            logger.endScope();
         }
     }
 

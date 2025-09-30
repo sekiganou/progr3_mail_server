@@ -282,8 +282,7 @@ public class MessageServiceTest {
         List<Message> result = messageService.getAllUserMessages(invalidUserId);
 
         // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 
     @Test

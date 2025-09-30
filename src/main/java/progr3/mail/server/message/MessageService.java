@@ -108,12 +108,12 @@ public class MessageService {
 
         if (userId == null || userId.isEmpty()) {
             logger.logError("User ID is null", null);
-            return new ArrayList<>();
+            return null;
         }
 
         if (userRepository.getUserById(userId) == null) {
             logger.logError("User not found: " + userId, null);
-            return new ArrayList<>();
+            return null;
         }
 
         return messageRepository.getAllUserMessages(userId);

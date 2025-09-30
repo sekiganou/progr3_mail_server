@@ -33,6 +33,7 @@ public class UserService {
 
         if (user == null) {
             logger.logError("User not found with ID: " + userId, null);
+            return null;
         }
 
         return user;
@@ -45,6 +46,7 @@ public class UserService {
 
         if (user == null) {
             logger.logError("User not found with email: " + email, null);
+            return null;
         }
 
         return user;
