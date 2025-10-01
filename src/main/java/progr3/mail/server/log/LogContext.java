@@ -1,26 +1,58 @@
 package progr3.mail.server.log;
 
+import java.nio.charset.Charset;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LogContext {
-    private static final AtomicInteger counter = new AtomicInteger(0);
+    private static final int INITAL_COUNTER_VALUE = 1;
+    private static final int REQUEST_ID_LENGTH = 8;
+    private static final AtomicInteger counter = new AtomicInteger(INITAL_COUNTER_VALUE);
     private static final ThreadLocal<String> requestIdHolder = new ThreadLocal<>();
 
-    protected static void setRequestId(String requestId) {
-        requestIdHolder.set(requestId);
+    private static String getAlphaNumericString(int n) {
+
+        // length is bounded by 256 Character
+        byte[] array = new byte[256];
+        new Random().nextBytes(array);
+
+        String randomString = new String(array, Charset.forName("UTF-8"));
+
+        StringBuffer r = new StringBuffer();
+        for (int k = 0; k < randomString.length(); k++) {
+
+            char ch = randomString.charAt(k);
+
+            if
+            // ((ch >= 'a' && ch <= 'z')
+            (ch >= 'A' && ch <= 'Z'
+            // || (ch >= '0' && ch <= '9'))
+                    && n > 0) {
+
+                r.append(ch);
+                n--;
+            }
+        }
+
+        return r.toString();
     }
 
     protected static String getRequestId() {
         return requestIdHolder.get();
     }
 
+    protected static String getAndIncrementRequestId() {
+        return requestIdHolder.get() + "-" + counter.getAndIncrement();
+    }
+
     protected static String generateAndSetRequestId() {
-        String requestId = "REQ-" + counter.incrementAndGet();
+        String requestId = "REQ-" + getAlphaNumericString(REQUEST_ID_LENGTH);
         requestIdHolder.set(requestId);
         return requestId;
     }
 
     protected static void clear() {
+        counter.set(INITAL_COUNTER_VALUE);
         requestIdHolder.remove();
     }
 }

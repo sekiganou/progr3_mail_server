@@ -5,6 +5,7 @@ import java.util.List;
 
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.model.Message;
+import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Message.IsForwarded;
 import progr3.mail.server.user.IUserRepository;
 
@@ -22,7 +23,9 @@ public class MessageService {
     }
 
     public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
-        logger.logInfo("Sending message from user: " + senderUserId + " to recipients: " + recipientsUserEmails);
+        logger.logInfo(
+                "Sending message from user: " + userRepository.getUserById(senderUserId).getEmail() + " to recipients: "
+                        + recipientsUserEmails);
 
         for (String recipientUser : recipientsUserEmails) {
             if (userRepository.getUserByEmail(recipientUser) == null) {

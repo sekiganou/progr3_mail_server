@@ -31,17 +31,14 @@ public class Launcher {
         var messageRepo = new MessageRepository(jsonFileHandler, "data/test/messages.json");
         var userRepo = new UserRepository(jsonFileHandler, "data/test/users.json");
 
-        var testUser1 = UserConstructor.create("user-1@test.com", "user-1");
-        var testUser2 = UserConstructor.create("user-2@test.com", "user-2");
-
         var logger = new Logger(
                 LogLevelEnum.INFO, "data/test/logs.json", true, true,
                 jsonFileHandler);
         var messageService = new MessageService(messageRepo, userRepo, logger);
         var userService = new UserService(userRepo, logger);
 
-        // userRepo.saveUser(testUser1);
-        // userRepo.saveUser(testUser2);
+        var testUser1 = userRepo.getAllUsers().get(0);
+        var testUser2 = userRepo.getAllUsers().get(1);
 
         logger.startScope();
         userService.login(testUser1.getEmail());

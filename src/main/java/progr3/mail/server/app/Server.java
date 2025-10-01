@@ -3,38 +3,50 @@ package progr3.mail.server.app;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import progr3.mail.server.io.IJsonFileHandler;
+import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.ILogger;
+import progr3.mail.server.message.IMessageRepository;
+import progr3.mail.server.message.MessageRepository;
+import progr3.mail.server.message.MessageService;
+import progr3.mail.server.user.IUserRepository;
+import progr3.mail.server.user.UserRepository;
 
 public class Server {
 
     private ILogger logger;
+    private MessageService messageService;
 
     private final int N_WORKERS = 10;
     private final int PORT = 8080;
 
-    public Server(ILogger logger) {
+    public Server(MessageService messageService, ILogger logger) {
         this.logger = logger;
+        this.messageService = messageService;
     }
 
     public void start() {
         logger.startScope();
         logger.logInfo("Starting Mail Server...");
+        logger.endScope();
 
         Executor pool = Executors.newFixedThreadPool(N_WORKERS);
 
+        logger.startScope();
         logger.logInfo("Mail server started on port " + PORT);
         logger.endScope();
 
-        logger.startScope();
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
             while (true) {
                 var clientSocket = serverSocket.accept();
+                logger.startScope();
                 logger.logInfo("Client connected: " + clientSocket.getInetAddress());
-                pool.execute(new ClientHandler(clientSocket, logger));
+                pool.execute(new ClientHandler(clientSocket, logger, messageService));
+                logger.endScope();
             }
         } catch (Exception e) {
+            logger.startScope();
             logger.logError("Error in server socket operation", e);
-        } finally {
             logger.endScope();
         }
     }

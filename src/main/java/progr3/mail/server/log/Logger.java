@@ -49,8 +49,9 @@ public class Logger implements ILogger {
     }
 
     private void writeLog(LogLevel logLevel, String message) {
-        Log log = LogConstructor.create(LogContext.getRequestId(), logLevel, message);
-        String logMessage = "[" + LogContext.getRequestId() + "] " + "[" + logLevel + "] " + message;
+        var requestId = LogContext.getAndIncrementRequestId();
+        Log log = LogConstructor.create(requestId, logLevel, message);
+        String logMessage = "[" + requestId + "] " + "[" + logLevel + "] " + message;
         if (logToConsole) {
             System.out.println(logMessage);
         }
