@@ -54,7 +54,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public List<User> getAllUsers() {
-        return List.copyOf(usersById.values());
+        return usersById.isEmpty() ? new ArrayList<>() : List.copyOf(usersById.values());
     }
 
     @Override

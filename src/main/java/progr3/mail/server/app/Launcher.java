@@ -37,8 +37,15 @@ public class Launcher {
         var messageService = new MessageService(messageRepo, userRepo, logger);
         var userService = new UserService(userRepo, logger);
 
-        var testUser1 = userRepo.getAllUsers().get(0);
-        var testUser2 = userRepo.getAllUsers().get(1);
+        var users = userRepo.getAllUsers();
+
+        if (users.isEmpty()) {
+            userRepo.saveUser(UserConstructor.create("user-1@test.com", "User 1"));
+            userRepo.saveUser(UserConstructor.create("user-2@test.com", "User 2"));
+        }
+
+        var testUser1 = users.get(0);
+        var testUser2 = users.get(1);
 
         logger.startScope();
         userService.login(testUser1.getEmail());
