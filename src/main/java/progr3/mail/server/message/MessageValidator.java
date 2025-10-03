@@ -1,33 +1,33 @@
 package progr3.mail.server.message;
 
-import java.util.List;
+import progr3.mail.server.model.Message;
 
 public class MessageValidator {
-    public static boolean isValidEmail(String email) {
-        return email != null && !email.trim().isEmpty();
-    }
-
-    public static boolean isValidSubject(String subject) {
-        return subject != null && !subject.trim().isEmpty() && subject.length() <= 255;
-    }
-
-    public static boolean isValidBody(String body) {
-        return body != null && !body.trim().isEmpty() && body.length() <= 1000;
-    }
-
-    public static boolean isValidUserId(String userId) {
-        return userId != null && !userId.trim().isEmpty();
-    }
-
-    public static boolean isValidMessageId(String messageId) {
-        return messageId != null && !messageId.trim().isEmpty();
-    }
-
-    public static boolean areValidRecipients(List<String> recipientsUserEmails) {
-        if (recipientsUserEmails == null || recipientsUserEmails.isEmpty()) {
-            return false;
+    public static String isValidMessage(Message message) {
+        if (message == null) {
+            return "Message cannot be null";
         }
-        return true;
+        if (message.getSenderUserGUID() == null || message.getSenderUserGUID().isEmpty()) {
+            return "Invalid sender user ID";
+        }
+        if (message.getRecipientsUserEmails() == null || message.getRecipientsUserEmails().isEmpty()) {
+            return "Invalid recipients list";
+        }
+        for (String recipient : message.getRecipientsUserEmails()) {
+            if (recipient == null || recipient.isEmpty()) {
+                return "Invalid recipient email in recipients list";
+            }
+        }
+        if (message.getSubject() == null) {
+            return "Invalid subject";
+        }
+        if (message.getBody() == null) {
+            return "Invalid body";
+        }
+        if (message.getIsForwarded() == null) {
+            return "Invalid isForwarded flag";
+        }
+        return null; // Message is valid
     }
 
 }

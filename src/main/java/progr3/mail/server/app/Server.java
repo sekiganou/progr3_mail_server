@@ -1,5 +1,8 @@
 package progr3.mail.server.app;
 
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -11,18 +14,21 @@ import progr3.mail.server.message.MessageRepository;
 import progr3.mail.server.message.MessageService;
 import progr3.mail.server.user.IUserRepository;
 import progr3.mail.server.user.UserRepository;
+import progr3.mail.server.user.UserService;
 
 public class Server {
 
     private ILogger logger;
     private MessageService messageService;
+    private UserService userService;
 
     private final int N_WORKERS = 10;
     private final int PORT = 8080;
 
-    public Server(MessageService messageService, ILogger logger) {
+    public Server(ActiveUsers activeUsers, UserService userService, MessageService messageService, ILogger logger) {
         this.logger = logger;
         this.messageService = messageService;
+        this.userService = userService;
     }
 
     public void start() {
@@ -31,17 +37,18 @@ public class Server {
         logger.endScope();
 
         Executor pool = Executors.newFixedThreadPool(N_WORKERS);
-
-        logger.startScope();
-        logger.logInfo("Mail server started on port " + PORT);
-        logger.endScope();
+        var activeUsers = new ActiveUsers();
 
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
+            logger.startScope();
+            logger.logInfo("Mail server started on port " + PORT);
+            logger.endScope();
+
             while (true) {
                 var clientSocket = serverSocket.accept();
                 logger.startScope();
                 logger.logInfo("Client connected: " + clientSocket.getInetAddress());
-                pool.execute(new ClientHandler(clientSocket, logger, messageService));
+                pool.execute(new ClientHandler(clientSocket, logger, activeUsers, userService, messageService));
                 logger.endScope();
             }
         } catch (Exception e) {

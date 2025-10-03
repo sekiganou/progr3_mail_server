@@ -1,7 +1,14 @@
 package progr3.mail.server.user;
 
+import progr3.mail.server.app.ResponseConstructor;
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.log.ILogger;
+import progr3.mail.server.model.Response;
 import progr3.mail.server.model.User;
+import progr3.mail.server.model.MailResponse.LoginBodyOut;
+import progr3.mail.server.model.Response.Result;
+import progr3.mail.server.model.Response.Status;
 
 public class UserService {
     private IUserRepository userRepository;
@@ -12,43 +19,35 @@ public class UserService {
         this.logger = logger;
     }
 
-    public boolean login(String email) {
+    public User login(String email) throws BadRequestException, UserNotFoundException {
         logger.logInfo("Attempting login for email: " + email);
 
         var user = userRepository.getUserByEmail(email);
-        boolean loggedIn = user != null;
 
-        if (loggedIn) {
-            logger.logInfo("Login successful for email: " + email);
-        } else {
-            logger.logError("Login failed for email: " + email, null);
-        }
+        // var response = new Response();
+        // var loginBodyOut = new LoginBodyOut();
 
-        return loggedIn;
-    }
-
-    public User getUserById(String userId) {
-        logger.logInfo("Retrieving user by ID: " + userId);
-        var user = userRepository.getUserById(userId);
-
-        if (user == null) {
-            logger.logError("User not found with ID: " + userId, null);
-            return null;
-        }
+        // if (user != null) {
+        // logger.logInfo("Login successful for email: " + email);
+        // loginBodyOut.setGuid(user.getGuid());
+        // response = ResponseConstructor.success("Login Successful", loginBodyOut);
+        // } else {
+        // logger.logError("Login failed for email: " + email, null);
+        // response = ResponseConstructor.unauthorized("Login Failed: User not found",
+        // email);
+        // }
 
         return user;
     }
 
-    public User getUserByEmail(String email) {
+    public User getUserById(String userId) throws BadRequestException, UserNotFoundException {
+        logger.logInfo("Retrieving user by ID: " + userId);
+        return userRepository.getUserById(userId);
+    }
+
+    public User getUserByEmail(String email) throws BadRequestException, UserNotFoundException {
         logger.logInfo("Retrieving user by email: " + email);
 
-        var user = userRepository.getUserByEmail(email);
-
-        if (user == null) {
-            logger.logError("User not found with email: " + email, null);
-            return null;
-        }
-
-        return user;
+        return userRepository.getUserByEmail(email);
     }
 }

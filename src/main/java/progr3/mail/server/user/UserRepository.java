@@ -1,10 +1,13 @@
 package progr3.mail.server.user;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.model.User;
 
@@ -35,20 +38,20 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public boolean saveUser(User user) {
+    public String saveUser(User user) throws BadRequestException, IOException {
         if (usersById.get(user.getGuid()) != null) {
-            return false;
+            return user.getGuid();
         }
 
-        try {
-            usersById.put(user.getGuid(), user);
-            usersByEmail.put(user.getEmail(), user);
-            jsonFileHandler.saveToFile(user, filePath, User.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        var validationError = UserValidator.isValidUser(user);
+        if (validationError != null)
+            throw new BadRequestException(validationError);
+
+        usersById.put(user.getGuid(), user);
+        usersByEmail.put(user.getEmail(), user);
+
+        jsonFileHandler.saveToFile(user, filePath, User.class);
+        return user.getGuid();
 
     }
 
@@ -58,13 +61,27 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public User getUserById(String userId) {
-        return usersById.get(userId);
+    public User getUserById(String userId) throws BadRequestException, UserNotFoundException {
+        if (userId == null || userId.isEmpty())
+            throw new BadRequestException("User ID cannot be null");
+        var user = usersById.get(userId);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        return user;
     }
 
     @Override
-    public User getUserByEmail(String email) {
-        return usersByEmail.get(email);
+    public User getUserByEmail(String email) throws BadRequestException, UserNotFoundException {
+        if (email == null || email.isEmpty())
+            throw new BadRequestException("Email cannot be null");
+
+        var user = usersByEmail.get(email);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        return user;
     }
 
 }

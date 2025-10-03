@@ -1,10 +1,14 @@
 package progr3.mail.server.message;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.MessageNotFoundException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.model.Message;
 
@@ -36,53 +40,67 @@ public class MessageRepository implements IMessageRepository {
     }
 
     @Override
-    public List<Message> getAllUserMessages(String userId) {
+    public List<Message> getAllUserMessages(String userId) throws BadRequestException, UserNotFoundException {
+        if (userId == null || userId.isEmpty())
+            throw new BadRequestException("User ID cannot be null");
+
+        if (!messagesByUserId.containsKey(userId))
+            throw new UserNotFoundException();
+
         return messagesByUserId.getOrDefault(userId, new ArrayList<>());
     }
 
     @Override
-    public Message getMessageDetails(String messageId) {
-        return messagesById.get(messageId);
+    public Message getMessageDetails(String messageId) throws MessageNotFoundException {
+        var message = messagesById.get(messageId);
+        if (message == null) {
+            throw new MessageNotFoundException();
+        }
+        return message;
     }
 
     @Override
-    public boolean saveMessage(Message message) {
+    public String saveMessage(Message message) throws BadRequestException, IOException {
         if (messagesById.get(message.getGuid()) != null) {
-            return false;
+            return message.getGuid();
+        }
+        var validationError = MessageValidator.isValidMessage(message);
+
+        if (validationError != null) {
+            throw new BadRequestException(validationError);
         }
 
-        try {
-            messagesById.put(message.getGuid(), message);
-            messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
-                    .add(message);
-            jsonFileHandler.saveToFile(message, filePath, Message.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        messagesById.put(message.getGuid(), message);
+        messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
+                .add(message);
+
+        jsonFileHandler.saveToFile(message, filePath, Message.class);
+        return message.getGuid();
 
     }
 
     @Override
-    public boolean deleteMessage(String messageId) {
+    public void deleteMessage(String messageId) throws MessageNotFoundException, BadRequestException, IOException {
         if (messageId == null)
-            return false;
+            throw new BadRequestException("Message ID cannot be null");
 
         var message = messagesById.get(messageId);
 
-        if (message == null)
-            return false;
-
-        messagesById.remove(messageId);
-
-        try {
-            jsonFileHandler.removeFromFile(message, filePath, Message.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        if (message == null) {
+            throw new MessageNotFoundException();
         }
+
+        var validationError = MessageValidator.isValidMessage(message);
+        if (validationError != null) {
+            throw new BadRequestException(validationError);
+        }
+
+        var removedMessage = messagesById.remove(messageId);
+        if (removedMessage == null) {
+            throw new MessageNotFoundException();
+        }
+
+        jsonFileHandler.removeFromFile(message, filePath, Message.class);
     }
 
 }

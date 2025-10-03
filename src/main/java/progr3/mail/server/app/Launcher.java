@@ -27,38 +27,40 @@ public class Launcher {
         // var server = new Server(logger);
 
         // server.start();
-        var jsonFileHandler = new JsonFileHandler();
-        var messageRepo = new MessageRepository(jsonFileHandler, "data/test/messages.json");
-        var userRepo = new UserRepository(jsonFileHandler, "data/test/users.json");
+        // var jsonFileHandler = new JsonFileHandler();
+        // var messageRepo = new MessageRepository(jsonFileHandler,
+        // "data/test/messages.json");
+        // var userRepo = new UserRepository(jsonFileHandler, "data/test/users.json");
 
-        var logger = new Logger(
-                LogLevelEnum.INFO, "data/test/logs.json", true, true,
-                jsonFileHandler);
-        var messageService = new MessageService(messageRepo, userRepo, logger);
-        var userService = new UserService(userRepo, logger);
+        // var logger = new Logger(
+        // LogLevelEnum.INFO, "data/test/logs.json", true, true,
+        // jsonFileHandler);
+        // var messageService = new MessageService(messageRepo, userRepo, logger);
+        // var userService = new UserService(userRepo, logger);
 
-        var users = userRepo.getAllUsers();
+        // var users = userRepo.getAllUsers();
 
-        if (users.isEmpty()) {
-            userRepo.saveUser(UserConstructor.create("user-1@test.com", "User 1"));
-            userRepo.saveUser(UserConstructor.create("user-2@test.com", "User 2"));
-        }
+        // if (users.isEmpty()) {
+        // userRepo.saveUser(UserConstructor.create("user-1@test.com", "User 1"));
+        // userRepo.saveUser(UserConstructor.create("user-2@test.com", "User 2"));
+        // }
 
-        var testUser1 = users.get(0);
-        var testUser2 = users.get(1);
+        // var testUser1 = users.get(0);
+        // var testUser2 = users.get(1);
 
-        logger.startScope();
-        userService.login(testUser1.getEmail());
-        logger.endScope();
+        // logger.startScope();
+        // userService.login(testUser1.getEmail());
+        // logger.endScope();
 
-        logger.startScope();
-        messageService.getAllUserMessages(testUser1.getGuid());
-        logger.endScope();
+        // logger.startScope();
+        // messageService.getAllUserMessages(testUser1.getGuid());
+        // logger.endScope();
 
-        logger.startScope();
-        messageService.sendMessage(testUser1.getGuid(), Arrays.asList(testUser2.getEmail()),
-                "Hello", "This is a test message.");
-        logger.endScope();
+        // logger.startScope();
+        // messageService.sendMessage(testUser1.getGuid(),
+        // Arrays.asList(testUser2.getEmail()),
+        // "Hello", "This is a test message.");
+        // logger.endScope();
 
     }
 }

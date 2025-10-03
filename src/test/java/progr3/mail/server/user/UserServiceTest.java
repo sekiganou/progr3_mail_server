@@ -1,6 +1,8 @@
 package progr3.mail.server.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,6 +16,7 @@ import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.User;
+import progr3.mail.server.model.Response.Status;
 
 public class UserServiceTest {
     private JsonFileHandler jsonFileHandler;
@@ -93,16 +96,17 @@ public class UserServiceTest {
     @Test
     void login_WithValidCredentials_ShouldReturnUser() {
         // Act
-        boolean loggedIn = userService.login(testUser1.getEmail());
+        var response = userService.login(testUser1.getEmail());
         // Assert
-        assertEquals(true, loggedIn);
+        assertNotNull(response);
+        assertEquals(testUser1.getGuid(), response);
     }
 
     @Test
-    void login_WithInvalidCredentials_ShouldReturnFalse() {
+    void login_WithInvalidCredentials_ShouldReturnNull() {
         // Act
-        boolean loggedIn = userService.login("invalid email");
+        var loggedUserGUID = userService.login("invalid email");
         // Assert
-        assertEquals(false, loggedIn);
+        assertNull(loggedUserGUID);
     }
 }

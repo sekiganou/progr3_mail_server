@@ -1,8 +1,12 @@
 package progr3.mail.server.message;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.MessageNotFoundException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
@@ -22,36 +26,25 @@ public class MessageService {
         this.userRepository = userRepository;
     }
 
-    public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body) {
+    public String sendMessage(String senderUserId, List<String> recipientsUserEmails, String subject, String body)
+            throws BadRequestException, IOException, UserNotFoundException {
         logger.logInfo(
-                "Sending message from user: " + userRepository.getUserById(senderUserId).getEmail() + " to recipients: "
+                "Sending message from user: " + senderUserId + " to recipients: "
                         + recipientsUserEmails);
-
-        for (String recipientUser : recipientsUserEmails) {
-            if (userRepository.getUserByEmail(recipientUser) == null) {
-                logger.logError("Recipient user not found: " + recipientUser, null);
-                return null;
-            }
-        }
 
         var message = MessageConstructor.create(senderUserId,
                 recipientsUserEmails,
                 subject,
                 body);
 
-        return messageRepository.saveMessage(message) ? message.getGuid() : null;
+        return messageRepository.saveMessage(message);
     }
 
     public String replySingleToMessage(String senderUserId, String messageId, String subject,
-            String body) {
+            String body) throws MessageNotFoundException, BadRequestException, IOException {
         logger.logInfo("Replying to message: " + messageId + " from user: " + senderUserId);
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
-
-        if (originalMessage == null) {
-            logger.logError("Original message not found: " + messageId, null);
-            return null;
-        }
 
         var messageReply = MessageConstructor.create(
                 senderUserId,
@@ -59,23 +52,19 @@ public class MessageService {
                 subject,
                 body);
 
-        return messageRepository.saveMessage(messageReply) ? messageReply.getGuid() : null;
+        return messageRepository.saveMessage(messageReply);
     };
 
     public String replyAllToMessage(String senderUserId, String messageId,
-            String subject, String body) {
+            String subject, String body) throws MessageNotFoundException, BadRequestException, IOException {
         logger.logInfo("Replying all to message: " + messageId + " from user: " + senderUserId);
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
-        if (originalMessage == null) {
-            logger.logError("Original message not found: " + messageId, null);
+        var recipients = new ArrayList<>(originalMessage.getRecipientsUserEmails());
+        if (!recipients.add(originalMessage.getSenderUserGUID())) {
             return null;
         }
-
-        var recipients = new ArrayList<>(originalMessage.getRecipientsUserEmails());
-        if (!recipients.add(originalMessage.getSenderUserGUID()))
-            return null;
 
         var messageReply = MessageConstructor.create(
                 senderUserId,
@@ -83,75 +72,40 @@ public class MessageService {
                 subject,
                 body);
 
-        return messageRepository.saveMessage(messageReply) ? messageReply.getGuid() : null;
+        return messageRepository.saveMessage(messageReply);
     }
 
     public String forwardMessage(String forwarderUserId, String messageId,
-            List<String> recipientsUserEmails) {
+            List<String> recipientsUserEmails) throws MessageNotFoundException, BadRequestException, IOException {
         logger.logInfo("Forwarding message: " + messageId + " from user: " + forwarderUserId + " to recipients: "
                 + recipientsUserEmails);
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
-        if (originalMessage == null) {
-            logger.logError("Original message not found: " + messageId, null);
-            return null;
-        }
         var newMessage = MessageConstructor.copyFrom(originalMessage);
         newMessage.setSenderUserGUID(forwarderUserId);
         newMessage.setRecipientsUserEmails(recipientsUserEmails);
         newMessage.setIsForwarded(IsForwarded.YES);
 
-        return messageRepository.saveMessage(newMessage) ? newMessage.getGuid() : null;
+        return messageRepository.saveMessage(newMessage);
 
     }
 
-    public List<Message> getAllUserMessages(String userId) {
+    public List<Message> getAllUserMessages(String userId) throws BadRequestException, UserNotFoundException {
         logger.logInfo("Retrieving all messages for user: " + userId);
-
-        if (userId == null || userId.isEmpty()) {
-            logger.logError("User ID is null", null);
-            return null;
-        }
-
-        if (userRepository.getUserById(userId) == null) {
-            logger.logError("User not found: " + userId, null);
-            return null;
-        }
 
         return messageRepository.getAllUserMessages(userId);
     };
 
-    public Message getMessageDetails(String messageId) {
+    public Message getMessageDetails(String messageId) throws MessageNotFoundException, BadRequestException {
         logger.logInfo("Retrieving message details for message ID: " + messageId);
-
-        if (messageId == null || messageId.isEmpty()) {
-            logger.logError("Message ID is null", null);
-            return null;
-        }
-
-        if (messageRepository.getMessageDetails(messageId) == null) {
-            logger.logError("Message not found: " + messageId, null);
-            return null;
-        }
 
         return messageRepository.getMessageDetails(messageId);
     }
 
-    public boolean deleteMessage(String messageId) {
+    public void deleteMessage(String messageId) throws MessageNotFoundException, BadRequestException, IOException {
         logger.logInfo("Deleting message with ID: " + messageId);
-
-        if (messageId == null || messageId.isEmpty()) {
-            logger.logError("Message ID is null", null);
-            return false;
-        }
-
-        if (messageRepository.getMessageDetails(messageId) == null) {
-            logger.logError("Message not found: " + messageId, null);
-            return false;
-        }
-
-        return messageRepository.deleteMessage(messageId);
+        messageRepository.deleteMessage(messageId);
     }
 
 }

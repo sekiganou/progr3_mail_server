@@ -5,33 +5,57 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.util.JsonParserDelegate;
+import com.fasterxml.jackson.core.util.JsonParserSequence;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.message.MessageService;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
-import progr3.mail.server.model.request_bodies.DeleteMessageBody;
-import progr3.mail.server.model.request_bodies.ForwardMessageBody;
-import progr3.mail.server.model.request_bodies.GetMessageDetailsBody;
-import progr3.mail.server.model.request_bodies.GetMessagesBody;
-import progr3.mail.server.model.request_bodies.GetUserDetailsBody;
-import progr3.mail.server.model.request_bodies.LoginBody;
-import progr3.mail.server.model.request_bodies.LogoutBody;
-import progr3.mail.server.model.request_bodies.ReplyAllMessageBody;
-import progr3.mail.server.model.request_bodies.ReplySingleMessageBody;
-import progr3.mail.server.model.request_bodies.SendMessageBody;
+import progr3.mail.server.model.Response;
+import progr3.mail.server.model.MailRequest.DeleteMessageBody;
+import progr3.mail.server.model.MailRequest.ForwardMessageBody;
+import progr3.mail.server.model.MailRequest.GetMessageDetailsBody;
+import progr3.mail.server.model.MailRequest.GetMessagesBody;
+import progr3.mail.server.model.MailRequest.GetUserDetailsBody;
+import progr3.mail.server.model.MailRequest.LoginBodyIn;
+import progr3.mail.server.model.MailRequest.LogoutBody;
+import progr3.mail.server.model.MailRequest.ReplyAllMessageBody;
+import progr3.mail.server.model.MailRequest.ReplySingleMessageBody;
+import progr3.mail.server.model.MailRequest.SendMessageBody;
+import progr3.mail.server.model.MailResponse.LoginBodyOut;
+import progr3.mail.server.user.UserService;
 
 public class ClientHandler implements Runnable {
 
     private ILogger logger;
     private MessageService messageService;
+    private UserService userService;
     private Socket clientSocket;
+    private ActiveUsers activeUsers;
 
-    public ClientHandler(Socket clientSocket, ILogger logger, MessageService messageService) {
+    public ClientHandler(Socket clientSocket, ILogger logger, ActiveUsers activeUsers, UserService userService,
+            MessageService messageService) {
         this.logger = logger;
         this.clientSocket = clientSocket;
         this.messageService = messageService;
+        this.userService = userService;
+        this.activeUsers = activeUsers;
+    }
+
+    private void sendResponse(Response response) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String jsonResponse = mapper.writeValueAsString(response);
+            clientSocket.getOutputStream().write(jsonResponse.getBytes());
+            clientSocket.getOutputStream().flush();
+        } catch (IOException e) {
+            logger.logError("Error sending response to client", e);
+        }
     }
 
     private void processRequest(Request request) {
@@ -40,9 +64,12 @@ public class ClientHandler implements Runnable {
         try {
             switch (request.getCommand()) {
                 case LOGIN:
-                    LoginBody loginBody = mapper.readValue(
+                    LoginBodyIn loginBodyIn = mapper.readValue(
                             request.getBody(),
-                            LoginBody.class);
+                            LoginBodyIn.class);
+                    var user = userService.login(loginBodyIn.getEmail());
+                    activeUsers.addUser(user.getGuid(), clientSocket);
+
                     // Handle login with loginBody.getEmail() and loginBody.getPassword()
                     break;
 
@@ -50,6 +77,7 @@ public class ClientHandler implements Runnable {
                     LogoutBody logoutBody = mapper.readValue(
                             request.getBody(),
                             LogoutBody.class);
+                    activeUsers.removeUser(logoutBody.getUserId());
                     // Handle logout with logoutBody.getUserId()
                     break;
 
@@ -129,7 +157,7 @@ public class ClientHandler implements Runnable {
                     DeleteMessageBody deleteBody = mapper.readValue(
                             request.getBody(),
                             DeleteMessageBody.class);
-                    boolean deleted = messageService.deleteMessage(
+                    messageService.deleteMessage(
                             deleteBody.getMessageId());
                     // Send response back to client with success/failure
                     break;
@@ -149,7 +177,6 @@ public class ClientHandler implements Runnable {
         try {
             InputStream inputStream = clientSocket.getInputStream();
             inputStreamBytes = inputStream.readAllBytes();
-            clientSocket.close();
         } catch (IOException e) {
             logger.logError("Error handling client connection", e);
             return;
@@ -166,6 +193,12 @@ public class ClientHandler implements Runnable {
         }
 
         processRequest(request);
+
+        try {
+            clientSocket.close();
+        } catch (Exception e) {
+            logger.logError("Error closing client socket", e);
+        }
 
     }
 
