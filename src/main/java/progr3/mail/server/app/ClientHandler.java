@@ -4,19 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.util.JsonParserDelegate;
-import com.fasterxml.jackson.core.util.JsonParserSequence;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.MessageNotFoundException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.message.MessageService;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Response;
+import progr3.mail.server.model.User;
 import progr3.mail.server.model.MailRequest.DeleteMessageBody;
 import progr3.mail.server.model.MailRequest.ForwardMessageBody;
 import progr3.mail.server.model.MailRequest.GetMessageDetailsBody;
@@ -47,38 +45,33 @@ public class ClientHandler implements Runnable {
         this.activeUsers = activeUsers;
     }
 
-    private void sendResponse(Response response) {
+    private Response processRequest(Request request) {
+        System.out.println("Processing request: " + request.getCommand());
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            String jsonResponse = mapper.writeValueAsString(response);
-            clientSocket.getOutputStream().write(jsonResponse.getBytes());
-            clientSocket.getOutputStream().flush();
-        } catch (IOException e) {
-            logger.logError("Error sending response to client", e);
-        }
-    }
-
-    private void processRequest(Request request) {
-        ObjectMapper mapper = new ObjectMapper();
-
+        Response response = new Response();
+        String logMessage = "";
         try {
             switch (request.getCommand()) {
                 case LOGIN:
                     LoginBodyIn loginBodyIn = mapper.readValue(
                             request.getBody(),
                             LoginBodyIn.class);
-                    var user = userService.login(loginBodyIn.getEmail());
+                    User user = userService.login(loginBodyIn.getEmail());
                     activeUsers.addUser(user.getGuid(), clientSocket);
-
-                    // Handle login with loginBody.getEmail() and loginBody.getPassword()
+                    var loginBodyOut = new LoginBodyOut();
+                    loginBodyOut.setEmail(user.getEmail());
+                    logMessage = "Login Successful for email: " + loginBodyIn.getEmail();
+                    response = ResponseConstructor.success(
+                            logMessage,
+                            loginBodyOut);
+                    logger.logInfo(logMessage);
                     break;
-
                 case LOGOUT:
                     LogoutBody logoutBody = mapper.readValue(
                             request.getBody(),
                             LogoutBody.class);
                     activeUsers.removeUser(logoutBody.getUserId());
-                    // Handle logout with logoutBody.getUserId()
+                    response = ResponseConstructor.success("Logout Successful", logoutBody.getUserId());
                     break;
 
                 case GET_USER_DETAILS:
@@ -166,13 +159,35 @@ public class ClientHandler implements Runnable {
                     logger.logError("Unknown command: " + request.getCommand(), null);
                     break;
             }
+        } catch (MessageNotFoundException e) {
+            String message = "Message not found";
+            logger.logError(message, e);
+            response = ResponseConstructor.notFound(message, null);
+        } catch (BadRequestException e) {
+            String message = "Bad request";
+            logger.logError(message, e);
+            response = ResponseConstructor.badRequest(message, null);
+        } catch (UserNotFoundException e) {
+            String message = "User not found";
+            logger.logError(message, e);
+            response = ResponseConstructor.notFound(message, null);
+        } catch (IOException e) {
+            String message = "IO Exception while processing request";
+            logger.logError(message, e);
+            response = ResponseConstructor.internalServerError(message, null);
         } catch (Exception e) {
-            logger.logError("Error processing request: " + request.getCommand(), e);
+            String message = "Unexpected error";
+            logger.logError(message, e);
+            response = ResponseConstructor.internalServerError(message, null);
         }
+
+        return response;
     }
 
     @Override
     public void run() {
+        logger.startScope();
+
         byte[] inputStreamBytes;
         try {
             InputStream inputStream = clientSocket.getInputStream();
@@ -192,13 +207,26 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        processRequest(request);
+        System.out.println("Received request: " + request.getCommand());
+
+        var response = processRequest(request);
+
+        System.out.println("Sending response: " + response.getMessage());
+
+        try {
+            String jsonResponse = mapper.writeValueAsString(response);
+            clientSocket.getOutputStream().write(jsonResponse.getBytes());
+            clientSocket.getOutputStream().flush();
+        } catch (IOException e) {
+            logger.logError("Error sending response to client", e);
+        }
 
         try {
             clientSocket.close();
         } catch (Exception e) {
             logger.logError("Error closing client socket", e);
         }
+        logger.endScope();
 
     }
 

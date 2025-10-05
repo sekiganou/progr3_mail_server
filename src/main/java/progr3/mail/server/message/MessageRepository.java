@@ -61,13 +61,14 @@ public class MessageRepository implements IMessageRepository {
 
     @Override
     public String saveMessage(Message message) throws BadRequestException, IOException {
-        if (messagesById.get(message.getGuid()) != null) {
-            return message.getGuid();
-        }
         var validationError = MessageValidator.isValidMessage(message);
 
         if (validationError != null) {
             throw new BadRequestException(validationError);
+        }
+
+        if (messagesById.get(message.getGuid()) != null) {
+            return message.getGuid();
         }
 
         messagesById.put(message.getGuid(), message);

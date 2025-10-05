@@ -48,12 +48,17 @@ public class Server {
                 var clientSocket = serverSocket.accept();
                 logger.startScope();
                 logger.logInfo("Client connected: " + clientSocket.getInetAddress());
-                pool.execute(new ClientHandler(clientSocket, logger, activeUsers, userService, messageService));
                 logger.endScope();
+
+                pool.execute(new ClientHandler(clientSocket, logger, activeUsers, userService, messageService));
             }
         } catch (Exception e) {
             logger.startScope();
             logger.logError("Error in server socket operation", e);
+            logger.endScope();
+        } finally {
+            logger.startScope();
+            logger.logInfo("Shutting down Mail Server...");
             logger.endScope();
         }
     }

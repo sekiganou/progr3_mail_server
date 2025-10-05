@@ -39,13 +39,13 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public String saveUser(User user) throws BadRequestException, IOException {
-        if (usersById.get(user.getGuid()) != null) {
-            return user.getGuid();
-        }
-
         var validationError = UserValidator.isValidUser(user);
         if (validationError != null)
             throw new BadRequestException(validationError);
+
+        if (usersById.get(user.getGuid()) != null) {
+            return user.getGuid();
+        }
 
         usersById.put(user.getGuid(), user);
         usersByEmail.put(user.getEmail(), user);

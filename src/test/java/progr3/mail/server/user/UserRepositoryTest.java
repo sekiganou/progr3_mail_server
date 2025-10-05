@@ -1,6 +1,7 @@
 package progr3.mail.server.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.User;
 
@@ -25,12 +28,11 @@ public class UserRepositoryTest {
     private User testUser2;
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() throws IOException, BadRequestException {
         jsonFileHandler = new JsonFileHandler();
 
         String filePath = tempDir.resolve("users.json").toString();
 
-        // Setup test messages
         testUser1 = UserConstructor.create("user-1@test.com", "user-1");
         testUser2 = UserConstructor.create("user-2@test.com", "user-2");
 
@@ -39,60 +41,106 @@ public class UserRepositoryTest {
         jsonFileHandler.saveToFile(testUser1, filePath, userClass);
         jsonFileHandler.saveToFile(testUser2, filePath, userClass);
 
-        // Create repository with mocked dependencies
         userRepository = new UserRepository(jsonFileHandler, filePath);
     }
 
-    // @AfterEach
-    // void cleanUp() {
-    // File file = new File(filePath);
-    // if (file.exists()) {
-    // file.delete();
-    // }
-    // }
-
     @Test
     void getAllUsers_ShouldReturnAllUsers() {
-
-        // Act
         List<User> result = userRepository.getAllUsers();
 
-        // Assert
         assertEquals(2, result.size());
         assertTrue(result.contains(testUser1));
         assertTrue(result.contains(testUser2));
     }
 
     @Test
-    void getUserById_WithValidId_ShouldReturnUser() {
-        // Act
+    void getUserById_WithValidId_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
         User result = userRepository.getUserById(testUser1.getGuid());
-        // Assert
+
         assertEquals(testUser1, result);
     }
 
     @Test
-    void getUserById_WithInvalidId_ShouldReturnNull() {
-        // Act
-        User result = userRepository.getUserById("invalid-id");
-        // Assert
-        assertEquals(null, result);
+    void getUserById_WithInvalidId_ShouldThrowUserNotFoundException() {
+        assertThrows(UserNotFoundException.class, () -> {
+            userRepository.getUserById("invalid-id");
+        });
     }
 
     @Test
-    void getUserByEmail_WithValidEmail_ShouldReturnUser() {
-        // Act
+    void getUserById_WithNullId_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.getUserById(null);
+        });
+    }
+
+    @Test
+    void getUserById_WithEmptyId_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.getUserById("");
+        });
+    }
+
+    @Test
+    void getUserByEmail_WithValidEmail_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
         User result = userRepository.getUserByEmail(testUser1.getEmail());
-        // Assert
+
         assertEquals(testUser1, result);
     }
 
     @Test
-    void getUserByEmail_WithInvalidEmail_ShouldReturnNull() {
-        // Act
-        User result = userRepository.getUserByEmail("invalid-email");
-        // Assert
-        assertEquals(null, result);
+    void getUserByEmail_WithInvalidEmail_ShouldThrowUserNotFoundException() {
+        assertThrows(UserNotFoundException.class, () -> {
+            userRepository.getUserByEmail("invalid-email@test.com");
+        });
     }
 
+    @Test
+    void getUserByEmail_WithNullEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.getUserByEmail(null);
+        });
+    }
+
+    @Test
+    void getUserByEmail_WithEmptyEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.getUserByEmail("");
+        });
+    }
+
+    @Test
+    void saveUser_WithNewUser_ShouldSaveAndReturnGuid() throws BadRequestException, IOException, UserNotFoundException {
+        User newUser = UserConstructor.create("user-3@test.com", "user-3");
+
+        String result = userRepository.saveUser(newUser);
+
+        assertEquals(newUser.getGuid(), result);
+
+        User savedUser = userRepository.getUserById(newUser.getGuid());
+        assertEquals(newUser, savedUser);
+    }
+
+    @Test
+    void saveUser_WithExistingUser_ShouldReturnExistingGuid() throws IOException, BadRequestException {
+        String result = userRepository.saveUser(testUser1);
+
+        assertEquals(testUser1.getGuid(), result);
+    }
+
+    @Test
+    void saveUser_WithNullUser_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.saveUser(null);
+        });
+    }
+
+    @Test
+    void saveUser_WithInvalidUser_ShouldThrowBadRequestException() {
+        User invalidUser = new User();
+
+        assertThrows(BadRequestException.class, () -> {
+            userRepository.saveUser(invalidUser);
+        });
+    }
 }

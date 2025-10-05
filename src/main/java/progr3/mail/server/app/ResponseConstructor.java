@@ -20,7 +20,7 @@ public class ResponseConstructor {
         return response;
     }
 
-    public static Response internalError(String message, String body) {
+    public static Response internalServerError(String message, String body) {
         var response = new Response();
         response.setStatus(Response.Status.INTERNAL_SERVER_ERROR);
         response.setMessage(message);

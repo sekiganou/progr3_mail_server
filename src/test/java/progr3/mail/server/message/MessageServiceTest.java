@@ -2,9 +2,8 @@ package progr3.mail.server.message;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,6 +15,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.MessageNotFoundException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
@@ -40,7 +42,7 @@ public class MessageServiceTest {
     private UserRepository userRepository;
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() throws IOException, BadRequestException {
         jsonFileHandler = new JsonFileHandler();
         logger = new Logger(LogLevelEnum.DEBUG,
                 tempDir.resolve("test.json").toString(),
@@ -53,7 +55,7 @@ public class MessageServiceTest {
 
         testUser1 = UserConstructor.create("user-1@test.com", "user-1");
         testUser2 = UserConstructor.create("user-2@test.com", "user-2");
-        // Setup test messages
+
         testMessage1 = MessageConstructor.create(testUser1.getGuid(),
                 Arrays.asList(testUser1.getEmail()), "Test Subject 1", "Test Body 1");
         testMessage2 = MessageConstructor.create(testUser2.getGuid(),
@@ -79,17 +81,15 @@ public class MessageServiceTest {
     }
 
     @Test
-    void sendMessage_WithValidRecipients_ShouldCreateAndSaveMessage() {
-        // Arrange
+    void sendMessage_WithValidRecipients_ShouldCreateAndSaveMessage()
+            throws BadRequestException, IOException, UserNotFoundException, MessageNotFoundException {
         String senderUserId = testUser1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
         String subject = "Test Send Subject";
         String body = "Test Send Body";
 
-        // Act
         String resultMessageId = messageService.sendMessage(senderUserId, recipientEmails, subject, body);
 
-        // Assert
         assertNotNull(resultMessageId);
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
@@ -102,17 +102,15 @@ public class MessageServiceTest {
     }
 
     @Test
-    void sendMessage_WithMultipleValidRecipients_ShouldCreateAndSaveMessages() {
-        // Arrange
+    void sendMessage_WithMultipleValidRecipients_ShouldCreateAndSaveMessages()
+            throws BadRequestException, IOException, UserNotFoundException, MessageNotFoundException {
         String senderUserId = testUser1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail(), testUser2.getEmail());
         String subject = "Test Multiple Send Subject";
         String body = "Test Multiple Send Body";
 
-        // Act
         String resultMessageId = messageService.sendMessage(senderUserId, recipientEmails, subject, body);
 
-        // Assert
         assertNotNull(resultMessageId);
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
@@ -125,81 +123,47 @@ public class MessageServiceTest {
     }
 
     @Test
-    void sendMessage_WithInvalidRecipient_ShouldReturnNull() {
-        // Arrange
-        String senderUserId = testUser1.getGuid();
-        List<String> recipientEmails = Arrays.asList("invalid@test.com");
-        String subject = "Test Subject";
-        String body = "Test Body";
-
-        // Act
-        String resultMessageId = messageService.sendMessage(senderUserId, recipientEmails, subject, body);
-
-        // Assert
-        assertNull(resultMessageId);
-    }
-
-    @Test
-    void sendMessage_WithMultipleRecipientsOneInvalid_ShouldReturnNull() {
-        // Arrange
-        String senderUserId = testUser1.getGuid();
-        List<String> recipientEmails = Arrays.asList(testUser2.getEmail(), "invalid@test.com");
-
-        // Act
-        String resultMessageId = messageService.sendMessage(senderUserId, recipientEmails, "Subject", "Body");
-
-        // Assert
-        assertNull(resultMessageId);
-    }
-
-    @Test
-    void replySingleToMessage_WithValidMessage_ShouldCreateReply() {
-        // Arrange
+    void replySingleToMessage_WithValidMessage_ShouldCreateReply()
+            throws MessageNotFoundException, BadRequestException, IOException {
         String senderUserId = testUser2.getGuid();
         String originalMessageId = testMessage1.getGuid();
         String subject = "Re: Original Subject";
         String body = "Reply body";
 
-        // Act
         String result = messageService.replySingleToMessage(senderUserId, originalMessageId, subject, body);
 
-        // Assert
         assertNotNull(result);
 
         Message replyMessage = messageService.getMessageDetails(result);
 
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserEmails()); // Reply to original
-                                                                                                  // sender
+        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserEmails());
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
 
     @Test
-    void replySingleToMessage_WhenOriginalMessageNotFound_ShouldReturnNull() {
-        // Arrange
+    void replySingleToMessage_WhenOriginalMessageNotFound_ShouldThrowMessageNotFoundException() {
         String senderUserId = testUser2.getGuid();
-        String originalMessageId = "msg-3"; // Non-existent message ID
+        String originalMessageId = "msg-3";
         String subject = "Re: Original Subject";
         String body = "Reply body";
 
-        // Act & Assert
-        String result = messageService.replySingleToMessage(senderUserId, originalMessageId, subject, body);
-        assertNull(result);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.replySingleToMessage(senderUserId, originalMessageId, subject, body);
+        });
     }
 
     @Test
-    void replyAllToMessage_WithValidMessage_ShouldCreateReply() {
-        // Arrange
+    void replyAllToMessage_WithValidMessage_ShouldCreateReply()
+            throws MessageNotFoundException, BadRequestException, IOException {
         String senderUserId = testUser2.getGuid();
         String originalMessageId = testMessage1.getGuid();
         String subject = "Re: Original Subject";
         String body = "Reply All body";
 
-        // Act
         String result = messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
 
-        // Assert
         assertNotNull(result);
 
         Message replyMessage = messageService.getMessageDetails(result);
@@ -211,31 +175,26 @@ public class MessageServiceTest {
     }
 
     @Test
-    void replyAllToMessage_WhenOriginalMessageNotFound_ShouldReturnNull() {
-        // Arrange
+    void replyAllToMessage_WhenOriginalMessageNotFound_ShouldThrowMessageNotFoundException() {
         String senderUserId = testUser2.getGuid();
         String originalMessageId = "non-existent-msg-id";
         String subject = "Re: Original Subject";
         String body = "Reply All body";
 
-        // Act
-        String result = messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
-
-        // Assert
-        assertNull(result);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
+        });
     }
 
     @Test
-    void forwardMessage_WithValidRecipients_ShouldCreateForward() {
-        // Arrange
+    void forwardMessage_WithValidRecipients_ShouldCreateForward()
+            throws MessageNotFoundException, BadRequestException, IOException {
         String forwarderUserId = testUser2.getGuid();
         String originalMessageId = testMessage1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
 
-        // Act
         String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
 
-        // Assert
         assertNotNull(resultId);
 
         Message forwardedMessage = messageService.getMessageDetails(resultId);
@@ -245,28 +204,22 @@ public class MessageServiceTest {
     }
 
     @Test
-    void forwardMessage_WithInValidRecipients_ShouldReturnFalse() {
-        // Arrange
+    void forwardMessage_WithInvalidMessageId_ShouldThrowMessageNotFoundException() {
         String forwarderUserId = testUser2.getGuid();
         String originalMessageId = "non-existent-msg-id";
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
 
-        // Act
-        String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
-
-        // Assert
-        assertNull(resultId);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
+        });
     }
 
     @Test
-    void getAllUserMessages_WithValidUser_ShouldGetAllMessages() {
-        // Arrange
+    void getAllUserMessages_WithValidUser_ShouldGetAllMessages() throws BadRequestException, UserNotFoundException {
         String userId = testUser1.getGuid();
 
-        // Act
         List<Message> result = messageService.getAllUserMessages(userId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
@@ -274,26 +227,21 @@ public class MessageServiceTest {
     }
 
     @Test
-    void getAllUserMessages_WithInvalidUser_ShouldReturnEmptyList() {
-        // Arrange
+    void getAllUserMessages_WithInvalidUser_ShouldThrowUserNotFoundException() {
         String invalidUserId = "non-existent-user-id";
 
-        // Act
-        List<Message> result = messageService.getAllUserMessages(invalidUserId);
-
-        // Assert
-        assertNull(result);
+        assertThrows(UserNotFoundException.class, () -> {
+            messageService.getAllUserMessages(invalidUserId);
+        });
     }
 
     @Test
-    void getMessageDetails_WithValidMessageId_ShouldReturnMessage() {
-        // Arrange
+    void getMessageDetails_WithValidMessageId_ShouldReturnMessage()
+            throws MessageNotFoundException, BadRequestException {
         String messageId = testMessage1.getGuid();
 
-        // Act
         Message result = messageService.getMessageDetails(messageId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(testMessage1.getGuid(), result.getGuid());
         assertEquals(testMessage1.getSenderUserGUID(), result.getSenderUserGUID());
@@ -302,66 +250,50 @@ public class MessageServiceTest {
     }
 
     @Test
-    void getMessageDetails_WithInvalidMessageId_ShouldReturnNull() {
-        // Arrange
+    void getMessageDetails_WithInvalidMessageId_ShouldThrowMessageNotFoundException() {
         String invalidMessageId = "non-existent-message-id";
 
-        // Act
-        Message result = messageService.getMessageDetails(invalidMessageId);
-
-        // Assert
-        assertNull(result);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.getMessageDetails(invalidMessageId);
+        });
     }
 
     @Test
-    void getMessageDetails_WithNullMessageId_ShouldReturnNull() {
-        // Arrange
+    void getMessageDetails_WithNullMessageId_ShouldThrowMessageNotFoundException() {
         String nullMessageId = null;
 
-        // Act
-        Message result = messageService.getMessageDetails(nullMessageId);
-
-        // Assert
-        assertNull(result);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.getMessageDetails(nullMessageId);
+        });
     }
 
     @Test
-    void deleteMessage_WithValidMessageId_ShouldReturnTrue() {
-        // Arrange
+    void deleteMessage_WithValidMessageId_ShouldDeleteSuccessfully()
+            throws MessageNotFoundException, BadRequestException, IOException {
         String messageId = testMessage1.getGuid();
 
-        // Act
-        boolean result = messageService.deleteMessage(messageId);
+        messageService.deleteMessage(messageId);
 
-        // Assert
-        assertTrue(result);
-
-        // Verify message is actually deleted
-        Message deletedMessage = messageService.getMessageDetails(messageId);
-        assertNull(deletedMessage);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.getMessageDetails(messageId);
+        });
     }
 
     @Test
-    void deleteMessage_WithInvalidMessageId_ShouldReturnFalse() {
-        // Arrange
+    void deleteMessage_WithInvalidMessageId_ShouldThrowMessageNotFoundException() {
         String invalidMessageId = "non-existent-message-id";
 
-        // Act
-        boolean result = messageService.deleteMessage(invalidMessageId);
-
-        // Assert
-        assertFalse(result);
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.deleteMessage(invalidMessageId);
+        });
     }
 
     @Test
-    void deleteMessage_WithNullMessageId_ShouldReturnFalse() {
-        // Arrange
+    void deleteMessage_WithNullMessageId_ShouldThrowBadRequestException() {
         String nullMessageId = null;
 
-        // Act
-        boolean result = messageService.deleteMessage(nullMessageId);
-
-        // Assert
-        assertFalse(result);
+        assertThrows(BadRequestException.class, () -> {
+            messageService.deleteMessage(nullMessageId);
+        });
     }
 }

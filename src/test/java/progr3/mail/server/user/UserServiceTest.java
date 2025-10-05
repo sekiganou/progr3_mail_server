@@ -2,7 +2,7 @@ package progr3.mail.server.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -12,11 +12,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import progr3.mail.server.exceptions.BadRequestException;
+import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.User;
-import progr3.mail.server.model.Response.Status;
 
 public class UserServiceTest {
     private JsonFileHandler jsonFileHandler;
@@ -31,7 +32,7 @@ public class UserServiceTest {
     private UserRepository userRepository;
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() throws IOException, BadRequestException {
         jsonFileHandler = new JsonFileHandler();
         logger = new Logger(LogLevelEnum.DEBUG,
                 tempDir.resolve("test.json").toString(),
@@ -41,11 +42,9 @@ public class UserServiceTest {
 
         String userFile = tempDir.resolve("users.json").toString();
 
-        // Setup test messages
         testUser1 = UserConstructor.create("user-1@test.com", "user-1");
         testUser2 = UserConstructor.create("user-2@test.com", "user-2");
 
-        // Create repository with mocked dependencies
         userRepository = new UserRepository(jsonFileHandler, userFile);
 
         userRepository.saveUser(testUser1);
@@ -62,51 +61,88 @@ public class UserServiceTest {
     }
 
     @Test
-    void getUserByEmail_WithValidEmail_ShouldReturnUser() {
-        // Act
+    void getUserByEmail_WithValidEmail_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
         User result = userService.getUserByEmail(testUser1.getEmail());
-        // Assert
+
         assertEquals(testUser1, result);
     }
 
     @Test
-    void getUserByEmail_WithInvalidEmail_ShouldReturnNull() {
-        // Act
-        User result = userService.getUserByEmail("invalid email");
-        // Assert
-        assertEquals(null, result);
+    void getUserByEmail_WithInvalidEmail_ShouldThrowUserNotFoundException() {
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserByEmail("invalid@email.com");
+        });
     }
 
     @Test
-    void getUserById_WithValidId_ShouldReturnUser() {
-        // Act
+    void getUserByEmail_WithNullEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.getUserByEmail(null);
+        });
+    }
+
+    @Test
+    void getUserByEmail_WithEmptyEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.getUserByEmail("");
+        });
+    }
+
+    @Test
+    void getUserById_WithValidId_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
         User result = userService.getUserById(testUser1.getGuid());
-        // Assert
+
         assertEquals(testUser1, result);
     }
 
     @Test
-    void getUserById_WithInvalidId_ShouldReturnNull() {
-        // Act
-        User result = userService.getUserById("invalid-id");
-        // Assert
-        assertEquals(null, result);
+    void getUserById_WithInvalidId_ShouldThrowUserNotFoundException() {
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserById("invalid-id");
+        });
     }
 
     @Test
-    void login_WithValidCredentials_ShouldReturnUser() {
-        // Act
-        var response = userService.login(testUser1.getEmail());
-        // Assert
+    void getUserById_WithNullId_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.getUserById(null);
+        });
+    }
+
+    @Test
+    void getUserById_WithEmptyId_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.getUserById("");
+        });
+    }
+
+    @Test
+    void login_WithValidCredentials_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
+        User response = userService.login(testUser1.getEmail());
+
         assertNotNull(response);
-        assertEquals(testUser1.getGuid(), response);
+        assertEquals(testUser1.getGuid(), response.getGuid());
+        assertEquals(testUser1, response);
     }
 
     @Test
-    void login_WithInvalidCredentials_ShouldReturnNull() {
-        // Act
-        var loggedUserGUID = userService.login("invalid email");
-        // Assert
-        assertNull(loggedUserGUID);
+    void login_WithInvalidCredentials_ShouldThrowUserNotFoundException() {
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.login("invalid@email.com");
+        });
+    }
+
+    @Test
+    void login_WithNullEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.login(null);
+        });
+    }
+
+    @Test
+    void login_WithEmptyEmail_ShouldThrowBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            userService.login("");
+        });
     }
 }
