@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.Arrays;
 
+import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import javafx.application.Application;
 import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.io.JsonFileHandler;
@@ -33,6 +35,13 @@ public class Launcher {
         var seeder = new Seeder(logger);
         seeder.seedUsers(userRepo);
         var server = new Server(new ActiveUsers(), userService, messageService, logger);
-        server.start();
+
+        Thread serverThread = new Thread(server);
+        serverThread.setDaemon(true); // Make it a daemon thread so it stops when JavaFX exits
+        serverThread.start();
+
+        // Application.setUserAgentStylesheet(new
+        // PrimerDark().getUserAgentStylesheet());
+        Application.launch(LogViewApplication.class, args);
     }
 }

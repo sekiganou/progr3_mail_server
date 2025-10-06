@@ -7,7 +7,7 @@ public interface ILogger {
 
     void logInfo(String message);
 
-    void logError(String message, Throwable throwable);
+    void logError(String message);
 
     void logDebug(String message);
 

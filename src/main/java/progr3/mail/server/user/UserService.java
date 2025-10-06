@@ -19,7 +19,6 @@ public class UserService {
 
         User user = userRepository.getUserByEmail(email);
 
-        logger.logInfo("Login successful for email: " + user.getEmail());
         return user;
     }
 

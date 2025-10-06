@@ -16,7 +16,7 @@ import progr3.mail.server.user.IUserRepository;
 import progr3.mail.server.user.UserRepository;
 import progr3.mail.server.user.UserService;
 
-public class Server {
+public class Server implements Runnable {
 
     private ILogger logger;
     private MessageService messageService;
@@ -31,7 +31,8 @@ public class Server {
         this.userService = userService;
     }
 
-    public void start() {
+    @Override
+    public void run() {
         logger.startScope();
         logger.logInfo("Starting Mail Server...");
         logger.endScope();
@@ -54,7 +55,7 @@ public class Server {
             }
         } catch (Exception e) {
             logger.startScope();
-            logger.logError("Error in server socket operation", e);
+            logger.logError("Error in server socket operations");
             logger.endScope();
         } finally {
             logger.startScope();

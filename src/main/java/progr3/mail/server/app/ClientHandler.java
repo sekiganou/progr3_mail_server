@@ -55,13 +55,13 @@ public class ClientHandler implements Runnable {
                     User user = userService.login(email);
                     activeUsers.addUser(user.getGuid(), clientSocket);
 
-                    response = logAndCreateResponse("Login successfull", user);
+                    response = logAndCreateResponse("Login successful for email: " + user.getEmail(), user);
                     break;
                 case LOGOUT:
                     String guid = request.getBody();
                     activeUsers.removeUser(guid);
 
-                    response = logAndCreateResponse("Logout successfull", null);
+                    response = logAndCreateResponse("Logout successful", null);
                     break;
                 case SEND_MESSAGE:
                     SendMessageBody sendMessageBody = mapper.readValue(
@@ -128,75 +128,91 @@ public class ClientHandler implements Runnable {
                     break;
 
                 default:
-                    logger.logError("Unknown command: " + request.getCommand(), null);
+                    logger.logError("Unknown command: " + request.getCommand());
                     break;
             }
         } catch (MessageNotFoundException e) {
             String message = "Message not found";
-            logger.logError(message, e);
+            logger.logError(message);
             response = ResponseConstructor.notFound(message, null);
         } catch (BadRequestException e) {
             String message = "Bad request";
-            logger.logError(message, e);
+            logger.logError(message);
             response = ResponseConstructor.badRequest(message, null);
         } catch (UserNotFoundException e) {
             String message = "User not found";
-            logger.logError(message, e);
+            logger.logError(message);
             response = ResponseConstructor.notFound(message, null);
         } catch (IOException e) {
             String message = "IO Exception while processing request";
-            logger.logError(message, e);
+            logger.logError(message);
             response = ResponseConstructor.internalServerError(message, null);
         } catch (Exception e) {
             String message = "Unexpected error";
-            logger.logError(message, e);
+            logger.logError(message);
             response = ResponseConstructor.internalServerError(message, null);
         }
 
         return response;
     }
 
-    @Override
-    public void run() {
-        logger.startScope();
+    private byte[] readInputStream(Socket clientSocket) {
 
-        byte[] inputStreamBytes;
         try {
             InputStream inputStream = clientSocket.getInputStream();
-            inputStreamBytes = inputStream.readAllBytes();
+            byte[] inputStreamBytes = inputStream.readAllBytes();
+            return inputStreamBytes;
         } catch (IOException e) {
-            logger.logError("Error handling client connection", e);
-            return;
+            logger.logError("Error handling client connection");
+            return null;
         }
+    }
 
+    private Request parseRequest(byte[] inputStreamBytes) {
         ObjectMapper mapper = new ObjectMapper();
         Request request = new Request();
 
         try {
             request = mapper.readValue(inputStreamBytes, Request.class);
+            System.out.println("Received request: " + request.getCommand());
+
         } catch (Exception e) {
-            logger.logError("Failed to parse request", e);
-            return;
+            logger.logError("Failed to parse request");
         }
+        return request;
+    }
 
-        System.out.println("Received request: " + request.getCommand());
-
-        var response = processRequest(request);
-
+    private void writeOutputStream(Socket clientSocket, Response response) {
         System.out.println("Sending response: " + response.getMessage());
+
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
             String jsonResponse = mapper.writeValueAsString(response);
+
             clientSocket.getOutputStream().write(jsonResponse.getBytes());
             clientSocket.getOutputStream().flush();
         } catch (IOException e) {
-            logger.logError("Error sending response to client", e);
+            logger.logError("Error sending response to client");
         }
+    }
+
+    @Override
+    public void run() {
+        logger.startScope();
+
+        byte[] inputStreamBytes = readInputStream(clientSocket);
+
+        Request request = parseRequest(inputStreamBytes);
+
+        Response response = processRequest(request);
+
+        writeOutputStream(clientSocket, response);
 
         try {
             clientSocket.close();
         } catch (Exception e) {
-            logger.logError("Error closing client socket", e);
+            logger.logError("Error closing client socket");
         }
         logger.endScope();
 

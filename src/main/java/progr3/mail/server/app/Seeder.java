@@ -28,7 +28,7 @@ public class Seeder {
             userRepository.saveUser(UserConstructor.create("alessio-bagno@unito.com", "Alessio Bagno"));
             logger.logInfo("Default users seeded successfully.");
         } catch (Exception e) {
-            logger.logError("Error seeding default users", e);
+            logger.logError("Error seeding default users");
         } finally {
             logger.endScope();
         }

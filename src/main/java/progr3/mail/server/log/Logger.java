@@ -48,9 +48,9 @@ public class Logger implements ILogger {
         isInScope = false;
     }
 
-    private void writeLog(LogLevel logLevel, String message) {
+    private void writeLog(LogLevel logLevel, String message, String details) {
         var requestId = LogContext.getAndIncrementRequestId();
-        Log log = LogConstructor.create(requestId, logLevel, message);
+        Log log = LogConstructor.create(requestId, logLevel, message, details);
         String logMessage = "[" + requestId + "] " + "[" + logLevel + "] " + message;
         if (logToConsole) {
             System.out.println(logMessage);
@@ -67,21 +67,21 @@ public class Logger implements ILogger {
     @Override
     public void logInfo(String message) {
         if (currentLogLevel.ordinal() >= LogLevelEnum.INFO.ordinal()) {
-            writeLog(LogLevel.INFO, message);
+            writeLog(LogLevel.INFO, message, "");
         }
     }
 
     @Override
-    public void logError(String message, Throwable throwable) {
-        if (currentLogLevel.ordinal() >= LogLevelEnum.ERROR.ordinal()) {
-            writeLog(LogLevel.ERROR, message);
-        }
+    public void logError(String message) {
+        // if (currentLogLevel.ordinal() >= LogLevelEnum.ERROR.ordinal()) {
+        writeLog(LogLevel.ERROR, message, "");
+        // }
     }
 
     @Override
     public void logDebug(String message) {
         if (currentLogLevel.ordinal() >= LogLevelEnum.DEBUG.ordinal()) {
-            writeLog(LogLevel.DEBUG, message);
+            writeLog(LogLevel.DEBUG, message, "");
         }
     }
 
