@@ -15,17 +15,10 @@ import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Response;
 import progr3.mail.server.model.User;
-import progr3.mail.server.model.MailRequest.DeleteMessageBody;
 import progr3.mail.server.model.MailRequest.ForwardMessageBody;
-import progr3.mail.server.model.MailRequest.GetMessageDetailsBody;
-import progr3.mail.server.model.MailRequest.GetMessagesBody;
-import progr3.mail.server.model.MailRequest.GetUserDetailsBody;
-import progr3.mail.server.model.MailRequest.LoginBodyIn;
-import progr3.mail.server.model.MailRequest.LogoutBody;
 import progr3.mail.server.model.MailRequest.ReplyAllMessageBody;
 import progr3.mail.server.model.MailRequest.ReplySingleMessageBody;
 import progr3.mail.server.model.MailRequest.SendMessageBody;
-import progr3.mail.server.model.MailResponse.LoginBodyOut;
 import progr3.mail.server.user.UserService;
 
 public class ClientHandler implements Runnable {
@@ -45,52 +38,42 @@ public class ClientHandler implements Runnable {
         this.activeUsers = activeUsers;
     }
 
+    private Response logAndCreateResponse(String message, Object body) {
+        logger.logInfo(message);
+        return ResponseConstructor.success(message, body);
+    }
+
     private Response processRequest(Request request) {
         System.out.println("Processing request: " + request.getCommand());
         ObjectMapper mapper = new ObjectMapper();
         Response response = new Response();
-        String logMessage = "";
         try {
             switch (request.getCommand()) {
                 case LOGIN:
-                    LoginBodyIn loginBodyIn = mapper.readValue(
-                            request.getBody(),
-                            LoginBodyIn.class);
-                    User user = userService.login(loginBodyIn.getEmail());
+                    String email = request.getBody();
+
+                    User user = userService.login(email);
                     activeUsers.addUser(user.getGuid(), clientSocket);
-                    var loginBodyOut = new LoginBodyOut();
-                    loginBodyOut.setEmail(user.getEmail());
-                    logMessage = "Login Successful for email: " + loginBodyIn.getEmail();
-                    response = ResponseConstructor.success(
-                            logMessage,
-                            loginBodyOut);
-                    logger.logInfo(logMessage);
+
+                    response = logAndCreateResponse("Login successfull", user);
                     break;
                 case LOGOUT:
-                    LogoutBody logoutBody = mapper.readValue(
-                            request.getBody(),
-                            LogoutBody.class);
-                    activeUsers.removeUser(logoutBody.getUserId());
-                    response = ResponseConstructor.success("Logout Successful", logoutBody.getUserId());
-                    break;
+                    String guid = request.getBody();
+                    activeUsers.removeUser(guid);
 
-                case GET_USER_DETAILS:
-                    GetUserDetailsBody getUserBody = mapper.readValue(
-                            request.getBody(),
-                            GetUserDetailsBody.class);
-                    // Handle get user details with getUserBody.getUserId()
+                    response = logAndCreateResponse("Logout successfull", null);
                     break;
-
                 case SEND_MESSAGE:
-                    SendMessageBody sendBody = mapper.readValue(
+                    SendMessageBody sendMessageBody = mapper.readValue(
                             request.getBody(),
                             SendMessageBody.class);
                     String messageId = messageService.sendMessage(
-                            sendBody.getSenderUserId(),
-                            sendBody.getRecipientsUserEmails(),
-                            sendBody.getSubject(),
-                            sendBody.getBody());
-                    // Send response back to client with messageId
+                            sendMessageBody.getSenderUserId(),
+                            sendMessageBody.getRecipientsUserEmails(),
+                            sendMessageBody.getSubject(),
+                            sendMessageBody.getBody());
+
+                    response = logAndCreateResponse("Message sent successfully", messageId);
                     break;
 
                 case REPLY_SINGLE_MESSAGE:
@@ -102,7 +85,8 @@ public class ClientHandler implements Runnable {
                             replyBody.getMessageId(),
                             replyBody.getSubject(),
                             replyBody.getBody());
-                    // Send response back to client with replyId
+
+                    response = logAndCreateResponse("Reply sent successfully", replyId);
                     break;
 
                 case REPLY_ALL_MESSAGE:
@@ -114,7 +98,8 @@ public class ClientHandler implements Runnable {
                             replyAllBody.getMessageId(),
                             replyAllBody.getSubject(),
                             replyAllBody.getBody());
-                    // Send response back to client with replyAllId
+
+                    response = logAndCreateResponse("Reply all sent successfully", replyAllId);
                     break;
 
                 case FORWARD_MESSAGE:
@@ -125,34 +110,21 @@ public class ClientHandler implements Runnable {
                             forwardBody.getForwarderUserId(),
                             forwardBody.getMessageId(),
                             forwardBody.getRecipientsUserEmails());
-                    // Send response back to client with forwardId
+                    response = logAndCreateResponse("Message forwarded successfully", forwardId);
                     break;
 
                 case GET_MESSAGES:
-                    GetMessagesBody getMessagesBody = mapper.readValue(
-                            request.getBody(),
-                            GetMessagesBody.class);
+                    String userId = request.getBody();
                     List<Message> messages = messageService.getAllUserMessages(
-                            getMessagesBody.getUserId());
-                    // Send response back to client with messages list
-                    break;
-
-                case GET_MESSAGE_DETAILS:
-                    GetMessageDetailsBody getDetailsBody = mapper.readValue(
-                            request.getBody(),
-                            GetMessageDetailsBody.class);
-                    Message message = messageService.getMessageDetails(
-                            getDetailsBody.getMessageId());
-                    // Send response back to client with message
+                            userId);
+                    response = logAndCreateResponse("Messages retrieved successfully", messages);
                     break;
 
                 case DELETE_MESSAGE:
-                    DeleteMessageBody deleteBody = mapper.readValue(
-                            request.getBody(),
-                            DeleteMessageBody.class);
+                    String deleteMessageId = request.getBody();
                     messageService.deleteMessage(
-                            deleteBody.getMessageId());
-                    // Send response back to client with success/failure
+                            deleteMessageId);
+                    response = logAndCreateResponse("Message deleted successfully", null);
                     break;
 
                 default:

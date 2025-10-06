@@ -21,10 +21,11 @@ import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
+import progr3.mail.server.message.core.MessageConstructor;
 import progr3.mail.server.model.Message;
 import progr3.mail.server.model.User;
-import progr3.mail.server.user.UserConstructor;
 import progr3.mail.server.user.UserRepository;
+import progr3.mail.server.user.core.UserConstructor;
 
 public class MessageServiceTest {
     private JsonFileHandler jsonFileHandler;

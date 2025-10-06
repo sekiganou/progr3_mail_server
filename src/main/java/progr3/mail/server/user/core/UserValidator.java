@@ -1,4 +1,4 @@
-package progr3.mail.server.user;
+package progr3.mail.server.user.core;
 
 import progr3.mail.server.model.User;
 
@@ -15,4 +15,5 @@ public class UserValidator {
         }
         return null; // User is valid
     }
+
 }

@@ -1,4 +1,4 @@
-package progr3.mail.server.user;
+package progr3.mail.server.user.core;
 
 import java.util.UUID;
 
@@ -12,4 +12,5 @@ public class UserConstructor {
         user.setGuid(UUID.randomUUID().toString());
         return user;
     }
+
 }

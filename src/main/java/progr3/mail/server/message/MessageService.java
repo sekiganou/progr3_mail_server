@@ -8,8 +8,8 @@ import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.MessageNotFoundException;
 import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.log.ILogger;
+import progr3.mail.server.message.core.MessageConstructor;
 import progr3.mail.server.model.Message;
-import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Message.IsForwarded;
 import progr3.mail.server.user.IUserRepository;
 

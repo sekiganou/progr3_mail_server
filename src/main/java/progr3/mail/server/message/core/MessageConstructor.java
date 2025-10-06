@@ -1,4 +1,4 @@
-package progr3.mail.server.message;
+package progr3.mail.server.message.core;
 
 import java.util.List;
 import java.util.UUID;

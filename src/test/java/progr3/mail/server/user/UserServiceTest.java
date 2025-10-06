@@ -18,6 +18,7 @@ import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.LogLevelEnum;
 import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.User;
+import progr3.mail.server.user.core.UserConstructor;
 
 public class UserServiceTest {
     private JsonFileHandler jsonFileHandler;
@@ -118,17 +119,17 @@ public class UserServiceTest {
 
     @Test
     void login_WithValidCredentials_ShouldReturnUser() throws BadRequestException, UserNotFoundException {
-        User response = userService.login(testUser1.getEmail());
+        User user = userService.login(testUser1.getEmail());
 
-        assertNotNull(response);
-        assertEquals(testUser1.getGuid(), response.getGuid());
-        assertEquals(testUser1, response);
+        assertNotNull(user);
+        assertEquals(testUser1.getGuid(), user.getGuid());
+        assertEquals(testUser1, user);
     }
 
     @Test
     void login_WithInvalidCredentials_ShouldThrowUserNotFoundException() {
         assertThrows(UserNotFoundException.class, () -> {
-            userService.login("invalid@email.com");
+            userService.login("invalid-email");
         });
     }
 

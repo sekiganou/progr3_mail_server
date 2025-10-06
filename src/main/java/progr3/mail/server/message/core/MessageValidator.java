@@ -1,4 +1,4 @@
-package progr3.mail.server.message;
+package progr3.mail.server.message.core;
 
 import progr3.mail.server.model.Message;
 

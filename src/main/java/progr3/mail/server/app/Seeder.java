@@ -2,7 +2,7 @@ package progr3.mail.server.app;
 
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.user.IUserRepository;
-import progr3.mail.server.user.UserConstructor;
+import progr3.mail.server.user.core.UserConstructor;
 
 public class Seeder {
 

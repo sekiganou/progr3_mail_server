@@ -16,6 +16,7 @@ import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.model.User;
+import progr3.mail.server.user.core.UserConstructor;
 
 public class UserRepositoryTest {
     private JsonFileHandler jsonFileHandler;

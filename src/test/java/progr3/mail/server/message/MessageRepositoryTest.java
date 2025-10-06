@@ -17,6 +17,7 @@ import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.MessageNotFoundException;
 import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.message.core.MessageConstructor;
 import progr3.mail.server.model.Message;
 
 public class MessageRepositoryTest {

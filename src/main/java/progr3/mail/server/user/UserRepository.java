@@ -10,6 +10,7 @@ import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.model.User;
+import progr3.mail.server.user.core.UserValidator;
 
 public class UserRepository implements IUserRepository {
 
