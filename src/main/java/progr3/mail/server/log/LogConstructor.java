@@ -12,7 +12,6 @@ public class LogConstructor {
         log.setMessage(message);
         log.setRequestId(requestId);
         log.setTimestamp(new Date());
-        log.setDetails(details);
         return log;
     }
 }

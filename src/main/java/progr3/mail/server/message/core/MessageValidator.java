@@ -10,10 +10,10 @@ public class MessageValidator {
         if (message.getSenderUserGUID() == null || message.getSenderUserGUID().isEmpty()) {
             return "Invalid sender user ID";
         }
-        if (message.getRecipientsUserEmails() == null || message.getRecipientsUserEmails().isEmpty()) {
+        if (message.getRecipientsUserGUIDs() == null || message.getRecipientsUserGUIDs().isEmpty()) {
             return "Invalid recipients list";
         }
-        for (String recipient : message.getRecipientsUserEmails()) {
+        for (String recipient : message.getRecipientsUserGUIDs()) {
             if (recipient == null || recipient.isEmpty()) {
                 return "Invalid recipient email in recipients list";
             }

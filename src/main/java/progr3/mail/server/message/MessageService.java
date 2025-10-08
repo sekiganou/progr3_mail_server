@@ -32,8 +32,14 @@ public class MessageService {
                 "Sending message from user: " + senderUserId + " to recipients: "
                         + recipientsUserEmails);
 
+        var recipientsUserGUIDs = new ArrayList<String>();
+        for (var email : recipientsUserEmails) {
+            var user = userRepository.getUserByEmail(email);
+            recipientsUserGUIDs.add(user.getGuid());
+        }
+
         var message = MessageConstructor.create(senderUserId,
-                recipientsUserEmails,
+                recipientsUserGUIDs,
                 subject,
                 body);
 
@@ -61,7 +67,7 @@ public class MessageService {
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
-        var recipients = new ArrayList<>(originalMessage.getRecipientsUserEmails());
+        var recipients = new ArrayList<>(originalMessage.getRecipientsUserGUIDs());
         if (!recipients.add(originalMessage.getSenderUserGUID())) {
             return null;
         }
@@ -76,15 +82,22 @@ public class MessageService {
     }
 
     public String forwardMessage(String forwarderUserId, String messageId,
-            List<String> recipientsUserEmails) throws MessageNotFoundException, BadRequestException, IOException {
+            List<String> recipientsUserEmails)
+            throws MessageNotFoundException, UserNotFoundException, BadRequestException, IOException {
         logger.logInfo("Forwarding message: " + messageId + " from user: " + forwarderUserId + " to recipients: "
                 + recipientsUserEmails);
 
         var originalMessage = messageRepository.getMessageDetails(messageId);
 
+        var recipientsUserGUIDs = new ArrayList<String>();
+        for (var email : recipientsUserEmails) {
+            var user = userRepository.getUserByEmail(email);
+            recipientsUserGUIDs.add(user.getGuid());
+        }
+
         var newMessage = MessageConstructor.copyFrom(originalMessage);
         newMessage.setSenderUserGUID(forwarderUserId);
-        newMessage.setRecipientsUserEmails(recipientsUserEmails);
+        newMessage.setRecipientsUserGUIDs(recipientsUserGUIDs);
         newMessage.setIsForwarded(IsForwarded.YES);
 
         return messageRepository.saveMessage(newMessage);

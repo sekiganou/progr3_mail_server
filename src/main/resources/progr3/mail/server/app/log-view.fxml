@@ -25,10 +25,9 @@
     <TableView fx:id="logTableView" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="logLevelColumn" text="Level" prefWidth="80.0" />
-            <TableColumn fx:id="timestampColumn" text="Timestamp" prefWidth="180.0" />
-            <TableColumn fx:id="requestIdColumn" text="Request ID" prefWidth="120.0" />
-            <TableColumn fx:id="messageColumn" text="Message" prefWidth="350.0" />
-            <TableColumn fx:id="detailsColumn" text="Details" prefWidth="150.0" />
+            <TableColumn fx:id="timestampColumn" text="Timestamp" prefWidth="240.0" />
+            <TableColumn fx:id="requestIdColumn" text="Request ID" prefWidth="180.0" />
+            <TableColumn fx:id="messageColumn" text="Message" prefWidth="450.0" />
         </columns>
     </TableView>
 

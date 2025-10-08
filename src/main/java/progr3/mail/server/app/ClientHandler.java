@@ -44,7 +44,7 @@ public class ClientHandler implements Runnable {
     }
 
     private Response processRequest(Request request) {
-        System.out.println("Processing request: " + request.getCommand());
+        logger.logInfo("Started processing request: " + request.getCommand());
         ObjectMapper mapper = new ObjectMapper();
         Response response = new Response();
         try {
@@ -153,6 +153,8 @@ public class ClientHandler implements Runnable {
             response = ResponseConstructor.internalServerError(message, null);
         }
 
+        logger.logInfo("Finished processing request: " + request.getCommand());
+
         return response;
     }
 
@@ -174,7 +176,6 @@ public class ClientHandler implements Runnable {
 
         try {
             request = mapper.readValue(inputStreamBytes, Request.class);
-            System.out.println("Received request: " + request.getCommand());
 
         } catch (Exception e) {
             logger.logError("Failed to parse request");

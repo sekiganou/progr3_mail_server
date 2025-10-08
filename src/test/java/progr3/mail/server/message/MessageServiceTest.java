@@ -86,6 +86,7 @@ public class MessageServiceTest {
             throws BadRequestException, IOException, UserNotFoundException, MessageNotFoundException {
         String senderUserId = testUser1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
+        List<String> recipientGUIDs = Arrays.asList(testUser2.getGuid());
         String subject = "Test Send Subject";
         String body = "Test Send Body";
 
@@ -95,7 +96,7 @@ public class MessageServiceTest {
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
         assertEquals(senderUserId, savedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, savedMessage.getRecipientsUserEmails());
+        assertEquals(recipientGUIDs, savedMessage.getRecipientsUserGUIDs());
         assertEquals(subject, savedMessage.getSubject());
         assertEquals(body, savedMessage.getBody());
         assertNotNull(savedMessage.getGuid());
@@ -107,6 +108,8 @@ public class MessageServiceTest {
             throws BadRequestException, IOException, UserNotFoundException, MessageNotFoundException {
         String senderUserId = testUser1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail(), testUser2.getEmail());
+        List<String> recipientGUIDs = Arrays.asList(testUser2.getGuid(), testUser2.getGuid());
+
         String subject = "Test Multiple Send Subject";
         String body = "Test Multiple Send Body";
 
@@ -116,7 +119,7 @@ public class MessageServiceTest {
 
         Message savedMessage = messageService.getMessageDetails(resultMessageId);
         assertEquals(senderUserId, savedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, savedMessage.getRecipientsUserEmails());
+        assertEquals(recipientGUIDs, savedMessage.getRecipientsUserGUIDs());
         assertEquals(subject, savedMessage.getSubject());
         assertEquals(body, savedMessage.getBody());
         assertNotNull(savedMessage.getGuid());
@@ -138,7 +141,7 @@ public class MessageServiceTest {
         Message replyMessage = messageService.getMessageDetails(result);
 
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserEmails());
+        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserGUIDs());
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
@@ -169,8 +172,8 @@ public class MessageServiceTest {
 
         Message replyMessage = messageService.getMessageDetails(result);
         assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getGuid()));
-        assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getEmail()));
+        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getGuid()));
+        // assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getEmail()));
         assertEquals(subject, replyMessage.getSubject());
         assertEquals(body, replyMessage.getBody());
     }
@@ -189,10 +192,11 @@ public class MessageServiceTest {
 
     @Test
     void forwardMessage_WithValidRecipients_ShouldCreateForward()
-            throws MessageNotFoundException, BadRequestException, IOException {
+            throws UserNotFoundException, MessageNotFoundException, BadRequestException, IOException {
         String forwarderUserId = testUser2.getGuid();
         String originalMessageId = testMessage1.getGuid();
         List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
+        List<String> recipientGUIDs = Arrays.asList(testUser2.getGuid());
 
         String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
 
@@ -200,7 +204,7 @@ public class MessageServiceTest {
 
         Message forwardedMessage = messageService.getMessageDetails(resultId);
         assertEquals(forwarderUserId, forwardedMessage.getSenderUserGUID());
-        assertEquals(recipientEmails, forwardedMessage.getRecipientsUserEmails());
+        assertEquals(recipientGUIDs, forwardedMessage.getRecipientsUserGUIDs());
         assertEquals(Message.IsForwarded.YES, forwardedMessage.getIsForwarded());
     }
 

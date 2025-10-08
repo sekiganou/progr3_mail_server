@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 public class LogViewController {
 
@@ -35,9 +34,6 @@ public class LogViewController {
 
     @FXML
     private TableColumn<Log, String> messageColumn;
-
-    @FXML
-    private TableColumn<Log, String> detailsColumn;
 
     @FXML
     private Label statusLabel;
@@ -108,12 +104,6 @@ public class LogViewController {
         requestIdColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getRequestId()));
 
         messageColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getMessage()));
-
-        detailsColumn.setCellValueFactory(cellData -> {
-            Object details = cellData.getValue().getDetails();
-            String detailsStr = (details == null) ? "" : details.toString();
-            return new SimpleStringProperty(detailsStr);
-        });
 
         // Make message column wrap text
         messageColumn.setCellFactory(tc -> {

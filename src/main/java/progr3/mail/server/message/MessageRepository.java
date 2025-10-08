@@ -31,8 +31,11 @@ public class MessageRepository implements IMessageRepository {
         try {
             messages = jsonFileHandler.loadFromFile(filePath, Message.class);
             for (Message message : messages) {
-                messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
-                        .add(message);
+
+                for (String recipientGUID : message.getRecipientsUserGUIDs()) {
+                    messagesByUserId.computeIfAbsent(recipientGUID, k -> new ArrayList<>())
+                            .add(message);
+                }
                 messagesById.put(message.getGuid(), message);
             }
         } catch (Exception e) {
@@ -73,8 +76,11 @@ public class MessageRepository implements IMessageRepository {
         }
 
         messagesById.put(message.getGuid(), message);
-        messagesByUserId.computeIfAbsent(message.getSenderUserGUID(), k -> new ArrayList<>())
-                .add(message);
+        for (String recipientGUID : message.getRecipientsUserGUIDs()) {
+            messagesByUserId.computeIfAbsent(
+                    recipientGUID, k -> new ArrayList<>())
+                    .add(message);
+        }
 
         jsonFileHandler.saveToFile(message, filePath, Message.class);
         return message.getGuid();

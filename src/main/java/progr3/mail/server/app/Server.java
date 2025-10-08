@@ -1,19 +1,10 @@
 package progr3.mail.server.app;
 
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import progr3.mail.server.io.IJsonFileHandler;
-import progr3.mail.server.io.JsonFileHandler;
 import progr3.mail.server.log.ILogger;
-import progr3.mail.server.message.IMessageRepository;
-import progr3.mail.server.message.MessageRepository;
 import progr3.mail.server.message.MessageService;
-import progr3.mail.server.user.IUserRepository;
-import progr3.mail.server.user.UserRepository;
 import progr3.mail.server.user.UserService;
 
 public class Server implements Runnable {

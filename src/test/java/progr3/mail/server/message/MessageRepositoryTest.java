@@ -1,7 +1,6 @@
 package progr3.mail.server.message;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -37,9 +36,9 @@ public class MessageRepositoryTest {
         String filePath = tempDir.resolve("messages.json").toString();
 
         testMessage1 = MessageConstructor.create("user-1",
-                Arrays.asList("user-2@test.com"), "Test Subject 1", "Test Body 1");
+                Arrays.asList("user-2"), "Test Subject 1", "Test Body 1");
         testMessage2 = MessageConstructor.create("user-2",
-                Arrays.asList("user-1@test.com"), "Test Subject 2", "Test Body 2");
+                Arrays.asList("user-1"), "Test Subject 2", "Test Body 2");
 
         testMessage1.setGuid("msg-1");
         testMessage2.setGuid("msg-2");
@@ -56,7 +55,7 @@ public class MessageRepositoryTest {
         List<Message> result = messageRepository.getAllUserMessages("user-1");
 
         assertEquals(1, result.size());
-        assertEquals(testMessage1, result.get(0));
+        assertEquals(testMessage2, result.get(0));
     }
 
     @Test
