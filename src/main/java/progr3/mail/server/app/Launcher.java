@@ -35,7 +35,7 @@ public class Launcher {
         var userService = new UserService(userRepo, logger);
         var seeder = new Seeder(logger);
         seeder.seedUsers(userRepo);
-        var server = new Server(new ActiveUsers(), userService, messageService, logger);
+        var server = new Server(userService, messageService, logger);
 
         // try {
         // messageService.sendMessage("cb0466b6-348b-444f-9ee4-189573a606b5",

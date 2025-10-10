@@ -16,7 +16,7 @@ public class Server implements Runnable {
     private final int N_WORKERS = 10;
     private final int PORT = 8080;
 
-    public Server(ActiveUsers activeUsers, UserService userService, MessageService messageService, ILogger logger) {
+    public Server(UserService userService, MessageService messageService, ILogger logger) {
         this.logger = logger;
         this.messageService = messageService;
         this.userService = userService;
@@ -29,7 +29,6 @@ public class Server implements Runnable {
         logger.endScope();
 
         Executor pool = Executors.newFixedThreadPool(N_WORKERS);
-        var activeUsers = new ActiveUsers();
 
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
             logger.startScope();
@@ -42,7 +41,7 @@ public class Server implements Runnable {
                 logger.logInfo("Client connected: " + clientSocket.getInetAddress());
                 logger.endScope();
 
-                pool.execute(new ClientHandler(clientSocket, logger, activeUsers, userService, messageService));
+                pool.execute(new ClientHandler(clientSocket, logger, userService, messageService));
             }
         } catch (Exception e) {
             logger.startScope();

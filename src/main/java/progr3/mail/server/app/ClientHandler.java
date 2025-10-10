@@ -16,6 +16,7 @@ import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Response;
 import progr3.mail.server.model.User;
 import progr3.mail.server.model.MailRequest.ForwardMessageBody;
+import progr3.mail.server.model.MailRequest.GetMessagesWithFiltersBody;
 import progr3.mail.server.model.MailRequest.ReplyAllMessageBody;
 import progr3.mail.server.model.MailRequest.ReplySingleMessageBody;
 import progr3.mail.server.model.MailRequest.SendMessageBody;
@@ -27,15 +28,13 @@ public class ClientHandler implements Runnable {
     private MessageService messageService;
     private UserService userService;
     private Socket clientSocket;
-    private ActiveUsers activeUsers;
 
-    public ClientHandler(Socket clientSocket, ILogger logger, ActiveUsers activeUsers, UserService userService,
+    public ClientHandler(Socket clientSocket, ILogger logger, UserService userService,
             MessageService messageService) {
         this.logger = logger;
         this.clientSocket = clientSocket;
         this.messageService = messageService;
         this.userService = userService;
-        this.activeUsers = activeUsers;
     }
 
     private Response logAndCreateResponse(String message, Object body) {
@@ -53,15 +52,8 @@ public class ClientHandler implements Runnable {
                     String email = request.getBody();
 
                     User user = userService.login(email);
-                    activeUsers.addUser(user.getGuid(), clientSocket);
 
                     response = logAndCreateResponse("Login successful for email: " + user.getEmail(), user);
-                    break;
-                case LOGOUT:
-                    String guid = request.getBody();
-                    activeUsers.removeUser(guid);
-
-                    response = logAndCreateResponse("Logout successful", null);
                     break;
                 case SEND_MESSAGE:
                     SendMessageBody sendMessageBody = mapper.readValue(
@@ -118,6 +110,17 @@ public class ClientHandler implements Runnable {
                     List<Message> messages = messageService.getAllUserMessages(
                             userId);
                     response = logAndCreateResponse("Messages retrieved successfully", messages);
+                    break;
+
+                case GET_MESSAGES_WITH_FILTERS:
+                    GetMessagesWithFiltersBody filtersBody = mapper.readValue(
+                            request.getBody(),
+                            GetMessagesWithFiltersBody.class);
+                    List<Message> filteredMessages = messageService.getUserMessagesWithFilters(
+                            filtersBody.getUserId(),
+                            filtersBody.getStartDate(),
+                            filtersBody.getEndDate());
+                    response = logAndCreateResponse("Filtered messages retrieved successfully", filteredMessages);
                     break;
 
                 case DELETE_MESSAGE:
