@@ -8,6 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -186,5 +187,17 @@ public class LogViewController {
         logTableView.setItems(filteredLogEntries);
         updateLogCount();
         statusLabel.setText("Logs cleared");
+
+        File logFile = new File(LOG_FILE_PATH);
+        if (!logFile.exists()) {
+            statusLabel.setText("Log file does not exist");
+            return;
+        }
+
+        if (logFile.delete()) {
+            statusLabel.setText("Log file cleared");
+        } else {
+            statusLabel.setText("Failed to clear log file");
+        }
     }
 }

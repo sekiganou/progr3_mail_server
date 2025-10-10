@@ -130,6 +130,14 @@ public class ClientHandler implements Runnable {
                     response = logAndCreateResponse("Message deleted successfully", null);
                     break;
 
+                case GET_USERS:
+                    List<String> userIds = mapper.readValue(
+                            request.getBody(),
+                            List.class);
+                    List<User> users = userService.getUsersByIds(userIds);
+                    response = logAndCreateResponse("Users retrieved successfully", users);
+                    break;
+
                 default:
                     logger.logError("Unknown command: " + request.getCommand());
                     break;

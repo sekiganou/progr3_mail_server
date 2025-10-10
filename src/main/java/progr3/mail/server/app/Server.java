@@ -1,5 +1,7 @@
 package progr3.mail.server.app;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -15,6 +17,8 @@ public class Server implements Runnable {
 
     private final int N_WORKERS = 10;
     private final int PORT = 8080;
+    private volatile boolean running = true;
+    private ServerSocket serverSocket;
 
     public Server(UserService userService, MessageService messageService, ILogger logger) {
         this.logger = logger;
@@ -31,27 +35,50 @@ public class Server implements Runnable {
         Executor pool = Executors.newFixedThreadPool(N_WORKERS);
 
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
+            this.serverSocket = serverSocket;
+
             logger.startScope();
             logger.logInfo("Mail server started on port " + PORT);
             logger.endScope();
 
-            while (true) {
-                var clientSocket = serverSocket.accept();
-                logger.startScope();
-                logger.logInfo("Client connected: " + clientSocket.getInetAddress());
-                logger.endScope();
+            while (running) {
+                try {
+                    var clientSocket = serverSocket.accept();
+                    logger.startScope();
+                    logger.logInfo("Client connected: " + clientSocket.getInetAddress());
+                    logger.endScope();
 
-                pool.execute(new ClientHandler(clientSocket, logger, userService, messageService));
+                    pool.execute(new ClientHandler(clientSocket, logger, userService, messageService));
+                } catch (IOException e) {
+                    if (running) {
+                        logger.startScope();
+                        logger.logError("Error accepting client: " + e.getMessage());
+                        logger.endScope();
+                    }
+                }
             }
+
         } catch (Exception e) {
             logger.startScope();
             logger.logError("Error in server socket operations");
             logger.endScope();
-        } finally {
-            logger.startScope();
-            logger.logInfo("Shutting down Mail Server...");
-            logger.endScope();
         }
+    }
+
+    public void stopServer() {
+        running = false;
+        if (serverSocket != null && !serverSocket.isClosed()) {
+            try {
+                serverSocket.close(); // This unblocks accept()
+            } catch (IOException e) {
+                logger.startScope();
+                logger.logError("Error closing server socket: " + e.getMessage());
+                logger.endScope();
+            }
+        }
+        logger.startScope();
+        logger.logInfo("Server stop requested.");
+        logger.endScope();
     }
 
 }
