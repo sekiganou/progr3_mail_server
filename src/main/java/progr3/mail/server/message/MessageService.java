@@ -1,6 +1,7 @@
 package progr3.mail.server.message;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,6 +110,28 @@ public class MessageService {
 
         return messageRepository.getAllUserMessages(userId);
     };
+
+    public List<Message> getUserMessagesWithFilters(String userId, Date startDate, Date endDate)
+            throws UserNotFoundException, BadRequestException {
+        logger.logInfo("Retrieving all messages for user: " + userId + " with date filter from " + startDate + " to "
+                + endDate);
+
+        var allMessages = messageRepository.getAllUserMessages(userId);
+
+        if (startDate == null && endDate == null) {
+            return allMessages;
+        }
+
+        var filteredMessages = new ArrayList<Message>();
+
+        for (var message : allMessages) {
+            if (message.getDate().after(startDate) && message.getDate().before(endDate)) {
+                filteredMessages.add(message);
+            }
+        }
+
+        return filteredMessages;
+    }
 
     public Message getMessageDetails(String messageId) throws MessageNotFoundException, BadRequestException {
         logger.logInfo("Retrieving message details for message ID: " + messageId);

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -36,6 +37,7 @@ public class MessageServiceTest {
     private MessageService messageService;
     private Message testMessage1;
     private Message testMessage2;
+    private Message testMessage3;
     private User testUser1;
     private User testUser2;
     private Logger logger;
@@ -58,9 +60,13 @@ public class MessageServiceTest {
         testUser2 = UserConstructor.create("user-2@test.com", "user-2");
 
         testMessage1 = MessageConstructor.create(testUser1.getGuid(),
-                Arrays.asList(testUser1.getEmail()), "Test Subject 1", "Test Body 1");
+                Arrays.asList(testUser1.getGuid()), "Test Subject 1", "Test Body 1");
         testMessage2 = MessageConstructor.create(testUser2.getGuid(),
-                Arrays.asList(testUser2.getEmail()), "Test Subject 2", "Test Body 2");
+                Arrays.asList(testUser2.getGuid()), "Test Subject 2", "Test Body 2");
+        testMessage3 = MessageConstructor.create(testUser2.getGuid(),
+                Arrays.asList(testUser1.getGuid()), "Test Subject 3", "Test Body 3");
+
+        testMessage1.setDate(new Date(System.currentTimeMillis() - 200000));
 
         messageRepository = new MessageRepository(jsonFileHandler, messageFile);
         userRepository = new UserRepository(jsonFileHandler, userFile);
@@ -70,6 +76,7 @@ public class MessageServiceTest {
 
         messageRepository.saveMessage(testMessage1);
         messageRepository.saveMessage(testMessage2);
+        messageRepository.saveMessage(testMessage3);
 
         logger.startScope();
 
@@ -226,18 +233,62 @@ public class MessageServiceTest {
         List<Message> result = messageService.getAllUserMessages(userId);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
         assertEquals(testUser1.getGuid(), result.get(0).getSenderUserGUID());
     }
 
     @Test
-    void getAllUserMessages_WithInvalidUser_ShouldThrowUserNotFoundException() {
+    void getAllUserMessages_WithInvalidUser_ShouldThrowUserNotFoundException()
+            throws BadRequestException, UserNotFoundException {
         String invalidUserId = "non-existent-user-id";
+        List<Message> result = messageService.getAllUserMessages(invalidUserId);
 
-        assertThrows(UserNotFoundException.class, () -> {
-            messageService.getAllUserMessages(invalidUserId);
-        });
+        assertNotNull(result);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void getUserMessagesWithDateFilter_WithValidUser_ShouldGetFilteredMessages()
+            throws UserNotFoundException, BadRequestException {
+        String userId = testUser1.getGuid();
+        Date start = new Date(System.currentTimeMillis() - 100000);
+        Date end = new Date(System.currentTimeMillis() + 100000);
+
+        List<Message> result = messageService.getUserMessagesWithFilters(userId, start, end);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(testMessage3.getGuid(), result.get(0).getGuid());
+        assertEquals(testUser2.getGuid(), result.get(0).getSenderUserGUID());
+    }
+
+    @Test
+    void getUserMessagesWithDateFilter_WithNoFilter_ShouldGetAllMessages()
+            throws UserNotFoundException, BadRequestException {
+        String userId = testUser1.getGuid();
+
+        List<Message> result = messageService.getUserMessagesWithFilters(userId, null, null);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
+        assertEquals(testUser1.getGuid(), result.get(0).getSenderUserGUID());
+        assertEquals(testMessage3.getGuid(), result.get(1).getGuid());
+        assertEquals(testUser2.getGuid(), result.get(1).getSenderUserGUID());
+    }
+
+    @Test
+    void getUserMessagesWithDateFilter_WithInvalidUser_ShouldReturnEmptyList()
+            throws UserNotFoundException, BadRequestException {
+        String invalidUserId = "non-existent-user-id";
+        Date start = new Date(System.currentTimeMillis() - 100000);
+        Date end = new Date(System.currentTimeMillis() + 100000);
+
+        List<Message> result = messageService.getUserMessagesWithFilters(invalidUserId, start, end);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
     }
 
     @Test

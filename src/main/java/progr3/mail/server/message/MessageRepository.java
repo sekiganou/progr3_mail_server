@@ -44,13 +44,9 @@ public class MessageRepository implements IMessageRepository {
     }
 
     @Override
-    public List<Message> getAllUserMessages(String userId) throws BadRequestException, UserNotFoundException {
+    public List<Message> getAllUserMessages(String userId) throws BadRequestException {
         if (userId == null || userId.isEmpty())
             throw new BadRequestException("User ID cannot be null");
-
-        if (!messagesByUserId.containsKey(userId))
-            throw new UserNotFoundException();
-
         return messagesByUserId.getOrDefault(userId, new ArrayList<>());
     }
 

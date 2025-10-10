@@ -59,10 +59,10 @@ public class MessageRepositoryTest {
     }
 
     @Test
-    void getAllMessage_WithInvalidUserId_ShouldThrowUserNotFoundException() {
-        assertThrows(UserNotFoundException.class, () -> {
-            messageRepository.getAllUserMessages("invalid-user");
-        });
+    void getAllMessage_WithInvalidUserId_ShouldReturnEmptyList() throws BadRequestException {
+        List<Message> result = messageRepository.getAllUserMessages("invalid-user");
+
+        assertEquals(0, result.size());
     }
 
     @Test

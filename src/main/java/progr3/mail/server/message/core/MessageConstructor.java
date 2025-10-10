@@ -1,5 +1,6 @@
 package progr3.mail.server.message.core;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ public class MessageConstructor {
         message.setSubject(subject);
         message.setBody(body);
         message.setGuid(UUID.randomUUID().toString());
-        message.setDate(new java.util.Date());
+        message.setDate(new Date());
         message.setIsForwarded(IsForwarded.NO);
         return message;
     }
@@ -26,7 +27,7 @@ public class MessageConstructor {
         newMessage.setSubject(message.getSubject());
         newMessage.setBody(message.getBody());
         newMessage.setGuid(UUID.randomUUID().toString());
-        newMessage.setDate(new java.util.Date());
+        newMessage.setDate(new Date());
         newMessage.setIsForwarded(message.getIsForwarded());
         return newMessage;
     }
