@@ -100,7 +100,12 @@ public class MessageRepository implements IMessageRepository {
         }
 
         var removedMessage = messagesById.remove(messageId);
-        if (removedMessage == null) {
+        var removedMessagesFromUsers = messagesByUserId.values().stream()
+                .map(list -> list.removeIf(msg -> msg.getGuid().equals(messageId)))
+                .reduce((a, b) -> a || b)
+                .orElse(false);
+
+        if (removedMessage == null || !removedMessagesFromUsers) {
             throw new MessageNotFoundException();
         }
 

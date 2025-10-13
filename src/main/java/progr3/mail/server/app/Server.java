@@ -44,11 +44,8 @@ public class Server implements Runnable {
             while (running) {
                 try {
                     var clientSocket = serverSocket.accept();
-                    logger.startScope();
-                    logger.logInfo("Client connected: " + clientSocket.getInetAddress());
-                    logger.endScope();
-
-                    pool.execute(new ClientHandler(clientSocket, logger, userService, messageService));
+                    var clientHandler = new ClientHandler(clientSocket, logger, userService, messageService);
+                    pool.execute(clientHandler);
                 } catch (IOException e) {
                     if (running) {
                         logger.startScope();

@@ -212,6 +212,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         logger.startScope();
+        logger.logInfo("Client connected: " + clientSocket.getInetAddress().getHostAddress());
 
         byte[] inputStreamBytes = readInputStream(clientSocket);
 
@@ -225,8 +226,10 @@ public class ClientHandler implements Runnable {
             clientSocket.close();
         } catch (Exception e) {
             logger.logError("Error closing client socket");
+        } finally {
+            logger.logInfo("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+            logger.endScope();
         }
-        logger.endScope();
 
     }
 
