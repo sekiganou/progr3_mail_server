@@ -49,7 +49,7 @@ public class ClientHandler implements Runnable {
         try {
             switch (request.getCommand()) {
                 case HEALTH:
-                    response = logAndCreateResponse("Server is healthy", null);
+                    response = logAndCreateResponse("Server is healthy", Response.Status.OK);
                     break;
 
                 case LOGIN:

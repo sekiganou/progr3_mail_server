@@ -12,8 +12,7 @@ public class Logger implements ILogger {
     private boolean logToFile;
     private boolean logToConsole;
     private IJsonFileHandler jsonFileHandler;
-
-    private boolean isInScope = false;
+    private static final ThreadLocal<Boolean> isInScope = ThreadLocal.withInitial(() -> false);
 
     public Logger(
             LogLevelEnum level, String logFilePath, boolean logToFile, boolean logToConsole,
@@ -31,21 +30,21 @@ public class Logger implements ILogger {
     }
 
     public void startScope() {
-        if (isInScope) {
+        if (isInScope.get()) {
             throw new IllegalStateException("Logging scope already started.");
         }
 
         LogContext.generateAndSetRequestId();
-        isInScope = true;
+        isInScope.set(true);
     }
 
     public void endScope() {
-        if (!isInScope) {
+        if (!isInScope.get()) {
             throw new IllegalStateException("No active logging scope to end.");
         }
 
         LogContext.clear();
-        isInScope = false;
+        isInScope.set(false);
     }
 
     private void writeLog(LogLevel logLevel, String message, String details) {

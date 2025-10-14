@@ -2,12 +2,11 @@ package progr3.mail.server.log;
 
 import java.nio.charset.Charset;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class LogContext {
     private static final int INITAL_COUNTER_VALUE = 1;
     private static final int REQUEST_ID_LENGTH = 8;
-    private static final AtomicInteger counter = new AtomicInteger(INITAL_COUNTER_VALUE);
+    private static final ThreadLocal<Integer> counter = ThreadLocal.withInitial(() -> INITAL_COUNTER_VALUE);
     private static final ThreadLocal<String> requestIdHolder = new ThreadLocal<>();
 
     private static String getAlphaNumericString(int n) {
@@ -42,7 +41,9 @@ public class LogContext {
     }
 
     protected static String getAndIncrementRequestId() {
-        return requestIdHolder.get() + "-" + counter.getAndIncrement();
+        var requestId = requestIdHolder.get() + "-" + counter.get();
+        counter.set(counter.get() + 1);
+        return requestId;
     }
 
     protected static String generateAndSetRequestId() {

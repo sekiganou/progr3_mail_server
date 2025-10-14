@@ -8,7 +8,6 @@ import java.util.Map;
 
 import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.MessageNotFoundException;
-import progr3.mail.server.exceptions.UserNotFoundException;
 import progr3.mail.server.io.IJsonFileHandler;
 import progr3.mail.server.message.core.MessageValidator;
 import progr3.mail.server.model.Message;
