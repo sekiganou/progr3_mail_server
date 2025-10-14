@@ -48,6 +48,10 @@ public class ClientHandler implements Runnable {
         Response response = new Response();
         try {
             switch (request.getCommand()) {
+                case HEALTH:
+                    response = logAndCreateResponse("Server is healthy", null);
+                    break;
+
                 case LOGIN:
                     String email = request.getBody();
 
