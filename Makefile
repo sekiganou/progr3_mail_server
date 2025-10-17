@@ -1,11 +1,13 @@
+MAIN_CLASS=progr3.mail.server.app.Launcher
+
 build:
 	mvn clean compile
 
-test:
+test: build
 	mvn test
 
-run:
-	mvn clean compile exec:java -Dexec.mainClass="progr3.mail.server.app.Launcher"
+run: build
+	mvn exec:java -Dexec.mainClass=$(MAIN_CLASS)
 
 clean:
 	mvn clean
