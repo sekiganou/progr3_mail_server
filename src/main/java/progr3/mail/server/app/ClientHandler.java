@@ -131,7 +131,7 @@ public class ClientHandler implements Runnable {
                     String deleteMessageId = request.getBody();
                     messageService.deleteMessage(
                             deleteMessageId);
-                    response = logAndCreateResponse("Message deleted successfully", null);
+                    response = logAndCreateResponse("Message deleted successfully", "Deleted");
                     break;
 
                 case GET_USERS:
