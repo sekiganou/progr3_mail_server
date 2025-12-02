@@ -100,15 +100,14 @@ public class LogViewController {
             return new SimpleStringProperty(formattedTime);
         });
 
-        timestampColumn.comparatorProperty().set((s1, s2) -> {
-            Log l1 = logTableView.getItems().stream()
-                    .filter(log -> formatTimestamp(log.getTimestamp().toString()).equals(s1))
-                    .findFirst().orElse(null);
-            Log l2 = logTableView.getItems().stream()
-                    .filter(log -> formatTimestamp(log.getTimestamp().toString()).equals(s2))
-                    .findFirst().orElse(null);
-
-            return l1.getTimestamp().compareTo(l2.getTimestamp());
+        timestampColumn.setComparator((s1, s2) -> {
+            try {
+                LocalDateTime dt1 = LocalDateTime.parse(s1, TIME_FORMATTER);
+                LocalDateTime dt2 = LocalDateTime.parse(s2, TIME_FORMATTER);
+                return dt1.compareTo(dt2);
+            } catch (Exception e) {
+                return s1.compareTo(s2);
+            }
         });
 
         timestampColumn.setSortType(TableColumn.SortType.DESCENDING);
