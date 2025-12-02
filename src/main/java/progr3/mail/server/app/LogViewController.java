@@ -94,12 +94,24 @@ public class LogViewController {
             }
         });
 
-        // Timestamp column with conversion from Unix time
         timestampColumn.setCellValueFactory(cellData -> {
             String timestamp = cellData.getValue().getTimestamp().toString();
             String formattedTime = formatTimestamp(timestamp);
             return new SimpleStringProperty(formattedTime);
         });
+
+        timestampColumn.comparatorProperty().set((s1, s2) -> {
+            Log l1 = logTableView.getItems().stream()
+                    .filter(log -> formatTimestamp(log.getTimestamp().toString()).equals(s1))
+                    .findFirst().orElse(null);
+            Log l2 = logTableView.getItems().stream()
+                    .filter(log -> formatTimestamp(log.getTimestamp().toString()).equals(s2))
+                    .findFirst().orElse(null);
+
+            return l1.getTimestamp().compareTo(l2.getTimestamp());
+        });
+
+        timestampColumn.setSortType(TableColumn.SortType.DESCENDING);
 
         // Other columns
         requestIdColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getRequestId()));
@@ -162,6 +174,9 @@ public class LogViewController {
                 filteredLogEntries.setAll(entries);
                 logTableView.setItems(filteredLogEntries);
                 updateLogCount();
+                logTableView.getSortOrder().clear();
+                logTableView.getSortOrder().add(timestampColumn);
+                logTableView.sort();
                 statusLabel.setText("Logs loaded successfully");
             }
         } catch (IOException e) {
