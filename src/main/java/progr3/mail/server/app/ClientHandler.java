@@ -15,10 +15,7 @@ import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Response;
 import progr3.mail.server.model.User;
-import progr3.mail.server.model.MailRequest.ForwardMessageBody;
 import progr3.mail.server.model.MailRequest.GetMessagesWithFiltersBody;
-import progr3.mail.server.model.MailRequest.ReplyAllMessageBody;
-import progr3.mail.server.model.MailRequest.ReplySingleMessageBody;
 import progr3.mail.server.model.MailRequest.SendMessageBody;
 import progr3.mail.server.user.UserService;
 
@@ -59,6 +56,7 @@ public class ClientHandler implements Runnable {
 
                     response = logAndCreateResponse("Login successful for email: " + user.getEmail(), user);
                     break;
+
                 case SEND_MESSAGE:
                     SendMessageBody sendMessageBody = mapper.readValue(
                             request.getBody(),
@@ -70,43 +68,6 @@ public class ClientHandler implements Runnable {
                             sendMessageBody.getBody());
 
                     response = logAndCreateResponse("Message sent successfully", messageId);
-                    break;
-
-                case REPLY_SINGLE_MESSAGE:
-                    ReplySingleMessageBody replyBody = mapper.readValue(
-                            request.getBody(),
-                            ReplySingleMessageBody.class);
-                    String replyId = messageService.replySingleToMessage(
-                            replyBody.getSenderUserId(),
-                            replyBody.getMessageId(),
-                            replyBody.getSubject(),
-                            replyBody.getBody());
-
-                    response = logAndCreateResponse("Reply sent successfully", replyId);
-                    break;
-
-                case REPLY_ALL_MESSAGE:
-                    ReplyAllMessageBody replyAllBody = mapper.readValue(
-                            request.getBody(),
-                            ReplyAllMessageBody.class);
-                    String replyAllId = messageService.replyAllToMessage(
-                            replyAllBody.getSenderUserId(),
-                            replyAllBody.getMessageId(),
-                            replyAllBody.getSubject(),
-                            replyAllBody.getBody());
-
-                    response = logAndCreateResponse("Reply all sent successfully", replyAllId);
-                    break;
-
-                case FORWARD_MESSAGE:
-                    ForwardMessageBody forwardBody = mapper.readValue(
-                            request.getBody(),
-                            ForwardMessageBody.class);
-                    String forwardId = messageService.forwardMessage(
-                            forwardBody.getForwarderUserId(),
-                            forwardBody.getMessageId(),
-                            forwardBody.getRecipientsUserEmails());
-                    response = logAndCreateResponse("Message forwarded successfully", forwardId);
                     break;
 
                 case GET_MESSAGES:
@@ -137,7 +98,8 @@ public class ClientHandler implements Runnable {
                 case GET_USERS:
                     List<String> userIds = mapper.readValue(
                             request.getBody(),
-                            List.class);
+                            mapper.getTypeFactory()
+                                    .constructCollectionType(List.class, String.class));
                     List<User> users = userService.getUsersByIds(userIds);
                     response = logAndCreateResponse("Users retrieved successfully", users);
                     break;
