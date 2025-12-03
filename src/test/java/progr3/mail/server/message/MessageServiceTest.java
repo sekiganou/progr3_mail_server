@@ -255,13 +255,9 @@ public class MessageServiceTest {
 
         messageService.deleteMessage(messageId, userId);
 
-        var message = messageService.getMessageDetails(messageId);
-        var remainingRecipients = message.getRecipientsUserGUIDs();
-        var deletedRecipients = message.getDeletedRecipientsUserGUIDs();
-
-        assertEquals(userId, remainingRecipients.get(0));
-        assertEquals(userId, deletedRecipients.get(0));
-
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageService.getMessageDetails(messageId);
+        });
     }
 
     @Test
