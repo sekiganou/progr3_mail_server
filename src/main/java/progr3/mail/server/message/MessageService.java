@@ -80,9 +80,34 @@ public class MessageService {
         return messageRepository.getMessageDetails(messageId);
     }
 
-    public void deleteMessage(String messageId) throws MessageNotFoundException, BadRequestException, IOException {
-        logger.logInfo("Deleting message with ID: " + messageId);
-        messageRepository.deleteMessage(messageId);
+    public void deleteMessage(String messageId, String userId)
+            throws MessageNotFoundException, BadRequestException, IOException {
+        Message message = messageRepository.getMessageDetails(messageId);
+
+        var recipients = new ArrayList<>(message.getRecipientsUserGUIDs());
+        if (!recipients.contains(userId)) {
+            throw new BadRequestException("User is not a recipient of the message");
+        }
+
+        var newMessage = MessageConstructor.copyFrom(message);
+        var deletedRecipients = new ArrayList<>(message.getDeletedRecipientsUserGUIDs());
+
+        newMessage.setGuid(messageId);
+        deletedRecipients.add(userId);
+        newMessage.setDeletedRecipientsUserGUIDs(deletedRecipients);
+
+        if (deletedRecipients.equals(recipients)) {
+            // this is completely arbitrary, it's just to save on some space disk
+            logger.logInfo(
+                    "All recipients have deleted the message with ID: " + messageId + ". Removing message entirely.");
+            messageRepository.deleteMessage(messageId);
+        } else {
+            logger.logInfo(
+                    "User with ID: " + userId + " has deleted the message with ID: " + messageId
+                            + ". Updating message.");
+            messageRepository.updateMessage(newMessage);
+        }
+
     }
 
 }

@@ -135,6 +135,28 @@ public class MessageRepositoryTest {
     }
 
     @Test
+    void updateMessage_WithExistingMessage_ShouldUpdateSuccessfully()
+            throws IOException, BadRequestException, MessageNotFoundException {
+        String newSubject = "Updated Subject";
+
+        testMessage1.setSubject(newSubject);
+        messageRepository.updateMessage(testMessage1);
+        Message updatedMessage = messageRepository.getMessageDetails(testMessage1.getGuid());
+        assertEquals(newSubject, updatedMessage.getSubject());
+    }
+
+    @Test
+    void updateMessage_WithNonExistingMessage_ShouldThrowMessageNotFoundException() {
+        Message nonExistingMessage = MessageConstructor.create("user-4",
+                Arrays.asList("user-5"), "Non-existing Subject", "Non-existing Body");
+
+        nonExistingMessage.setGuid("non-existing-id");
+        assertThrows(MessageNotFoundException.class, () -> {
+            messageRepository.updateMessage(nonExistingMessage);
+        });
+    }
+
+    @Test
     void deleteMessage_WithExistingMessage_ShouldDeleteSuccessfully()
             throws IOException, MessageNotFoundException, BadRequestException {
         messageRepository.deleteMessage(testMessage1.getGuid());

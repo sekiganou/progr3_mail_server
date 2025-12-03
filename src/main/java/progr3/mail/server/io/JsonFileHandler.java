@@ -72,6 +72,34 @@ public class JsonFileHandler implements IJsonFileHandler {
         return result;
     }
 
+    public <T> void updateInFile(T existingObj, T newObj, String filename, Class<T> clazz) throws IOException {
+        ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
+        lock.writeLock().lock();
+        try {
+            File file = new File(filename);
+            if (!file.exists()) {
+                return;
+            }
+
+            List<T> data;
+
+            if (file.exists() && file.length() > 0) {
+                data = loadFromFile(filename, clazz);
+            } else {
+                return;
+            }
+
+            int index = data.indexOf(existingObj);
+            if (index != -1) {
+                data.set(index, newObj);
+                mapper.writeValue(file, data);
+            }
+
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public <T> void removeFromFile(T obj, String filename, Class<T> clazz) throws IOException {
         ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
         lock.writeLock().lock();

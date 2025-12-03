@@ -15,6 +15,7 @@ import progr3.mail.server.model.Message;
 import progr3.mail.server.model.Request;
 import progr3.mail.server.model.Response;
 import progr3.mail.server.model.User;
+import progr3.mail.server.model.MailRequest.DeleteMessageBody;
 import progr3.mail.server.model.MailRequest.GetMessagesWithFiltersBody;
 import progr3.mail.server.model.MailRequest.SendMessageBody;
 import progr3.mail.server.user.UserService;
@@ -89,9 +90,9 @@ public class ClientHandler implements Runnable {
                     break;
 
                 case DELETE_MESSAGE:
-                    String deleteMessageId = request.getBody();
+                    DeleteMessageBody deleteMessageBody = mapper.readValue(request.getBody(), DeleteMessageBody.class);
                     messageService.deleteMessage(
-                            deleteMessageId);
+                            deleteMessageBody.getMessageId(), deleteMessageBody.getUserId());
                     response = logAndCreateResponse("Message deleted successfully", "Deleted");
                     break;
 

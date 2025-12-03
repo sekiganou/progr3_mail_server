@@ -8,5 +8,7 @@ public interface IJsonFileHandler {
 
     public <T> List<T> loadFromFile(String filename, Class<T> clazz) throws IOException;
 
+    public <T> void updateInFile(T existingObj, T newObj, String filename, Class<T> clazz) throws IOException;
+
     public <T> void removeFromFile(T obj, String filename, Class<T> clazz) throws IOException;
 }
