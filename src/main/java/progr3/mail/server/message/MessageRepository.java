@@ -31,7 +31,12 @@ public class MessageRepository implements IMessageRepository {
             messages = jsonFileHandler.loadFromFile(filePath, Message.class);
             for (Message message : messages) {
 
-                for (String recipientGUID : message.getRecipientsUserGUIDs()) {
+                var recipientGUIDs = new ArrayList<>(message.getRecipientsUserGUIDs());
+                for (String deletedRecipientGUID : message.getDeletedRecipientsUserGUIDs()) {
+                    recipientGUIDs.remove(deletedRecipientGUID);
+                }
+
+                for (String recipientGUID : recipientGUIDs) {
                     messagesByUserId.computeIfAbsent(recipientGUID, k -> new ArrayList<>())
                             .add(message);
                 }
@@ -80,6 +85,40 @@ public class MessageRepository implements IMessageRepository {
         jsonFileHandler.saveToFile(message, filePath, Message.class);
         return message.getGuid();
 
+    }
+
+    @Override
+    public void updateMessage(Message newMessage)
+            throws BadRequestException, MessageNotFoundException, IOException {
+        var validationError = MessageValidator.isValidMessage(newMessage);
+        if (validationError != null) {
+            throw new BadRequestException(validationError);
+        }
+
+        var messageId = newMessage.getGuid();
+
+        var existingMessage = messagesById.get(messageId);
+        if (existingMessage == null) {
+            throw new MessageNotFoundException();
+        }
+
+        var recipients = new ArrayList<>(existingMessage.getRecipientsUserGUIDs());
+        if (!recipients.containsAll(newMessage.getRecipientsUserGUIDs())) {
+            throw new BadRequestException("Cannot add new recipients to the message");
+        }
+
+        messagesById.put(messageId, newMessage);
+
+        var deletedRecipients = new ArrayList<>(newMessage.getDeletedRecipientsUserGUIDs());
+        for (String recipientGUID : recipients) {
+            if (deletedRecipients.contains(recipientGUID)) {
+                messagesByUserId.get(recipientGUID).removeIf(msg -> msg.getGuid().equals(messageId));
+            }
+        }
+
+        // if there was a feature to add new recipients, it would be handled here
+
+        jsonFileHandler.updateInFile(existingMessage, newMessage, filePath, Message.class);
     }
 
     @Override

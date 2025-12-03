@@ -37,6 +37,7 @@ public class MessageServiceTest {
     private Message testMessage1;
     private Message testMessage2;
     private Message testMessage3;
+    private Message testMessage4;
     private User testUser1;
     private User testUser2;
     private Logger logger;
@@ -64,6 +65,8 @@ public class MessageServiceTest {
                 Arrays.asList(testUser2.getGuid()), "Test Subject 2", "Test Body 2");
         testMessage3 = MessageConstructor.create(testUser2.getGuid(),
                 Arrays.asList(testUser1.getGuid()), "Test Subject 3", "Test Body 3");
+        testMessage4 = MessageConstructor.create(testUser1.getGuid(),
+                Arrays.asList(testUser2.getGuid(), testUser1.getGuid()), "Test Subject 4", "Test Body 4");
 
         testMessage1.setDate(new Date(System.currentTimeMillis() - 200000));
 
@@ -76,6 +79,7 @@ public class MessageServiceTest {
         messageRepository.saveMessage(testMessage1);
         messageRepository.saveMessage(testMessage2);
         messageRepository.saveMessage(testMessage3);
+        messageRepository.saveMessage(testMessage4);
 
         logger.startScope();
 
@@ -139,7 +143,7 @@ public class MessageServiceTest {
         List<Message> result = messageService.getAllUserMessages(userId);
 
         assertNotNull(result);
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
         assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
         assertEquals(testUser1.getGuid(), result.get(0).getSenderUserGUID());
     }
@@ -155,6 +159,20 @@ public class MessageServiceTest {
     }
 
     @Test
+    void getAllUserMessages_WhereOneMessageIsDeletedForUser_ShouldNotReturnDeletedMessage()
+            throws BadRequestException, UserNotFoundException, IOException, MessageNotFoundException {
+        String userId = testUser1.getGuid();
+        String messageIdToDelete = testMessage3.getGuid();
+
+        messageService.deleteMessage(messageIdToDelete, userId);
+
+        List<Message> result = messageService.getAllUserMessages(userId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+    @Test
     void getUserMessagesWithDateFilter_WithValidUser_ShouldGetFilteredMessages()
             throws UserNotFoundException, BadRequestException {
         String userId = testUser1.getGuid();
@@ -164,7 +182,7 @@ public class MessageServiceTest {
         List<Message> result = messageService.getUserMessagesWithFilters(userId, start, end);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         assertEquals(testMessage3.getGuid(), result.get(0).getGuid());
         assertEquals(testUser2.getGuid(), result.get(0).getSenderUserGUID());
     }
@@ -177,7 +195,7 @@ public class MessageServiceTest {
         List<Message> result = messageService.getUserMessagesWithFilters(userId, null, null);
 
         assertNotNull(result);
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
         assertEquals(testMessage1.getGuid(), result.get(0).getGuid());
         assertEquals(testUser1.getGuid(), result.get(0).getSenderUserGUID());
         assertEquals(testMessage3.getGuid(), result.get(1).getGuid());
@@ -233,12 +251,36 @@ public class MessageServiceTest {
     void deleteMessage_WithValidMessageId_ShouldDeleteSuccessfully()
             throws MessageNotFoundException, BadRequestException, IOException {
         String messageId = testMessage1.getGuid();
+        String userId = testUser1.getGuid();
 
-        messageService.deleteMessage(messageId);
+        messageService.deleteMessage(messageId, userId);
 
-        assertThrows(MessageNotFoundException.class, () -> {
-            messageService.getMessageDetails(messageId);
-        });
+        var message = messageService.getMessageDetails(messageId);
+        var remainingRecipients = message.getRecipientsUserGUIDs();
+        var deletedRecipients = message.getDeletedRecipientsUserGUIDs();
+
+        assertEquals(userId, remainingRecipients.get(0));
+        assertEquals(userId, deletedRecipients.get(0));
+
+    }
+
+    @Test
+    void deleteMessage_WithValidMessageId_MultipleRecipients_ShouldRemoveRecipientOnly()
+            throws MessageNotFoundException, BadRequestException, IOException {
+        String messageId = testMessage4.getGuid();
+        String userId = testUser1.getGuid();
+
+        assertEquals(2, testMessage4.getRecipientsUserGUIDs().size());
+
+        messageService.deleteMessage(messageId, userId);
+
+        Message remainingMessage = messageService.getMessageDetails(messageId);
+        List<String> remainingRecipients = remainingMessage.getRecipientsUserGUIDs();
+        List<String> deletedRecipients = remainingMessage.getDeletedRecipientsUserGUIDs();
+
+        assertEquals(2, remainingRecipients.size());
+        assertEquals(1, deletedRecipients.size());
+        assertEquals(userId, deletedRecipients.get(0));
     }
 
     @Test
@@ -246,16 +288,7 @@ public class MessageServiceTest {
         String invalidMessageId = "non-existent-message-id";
 
         assertThrows(MessageNotFoundException.class, () -> {
-            messageService.deleteMessage(invalidMessageId);
-        });
-    }
-
-    @Test
-    void deleteMessage_WithNullMessageId_ShouldThrowBadRequestException() {
-        String nullMessageId = null;
-
-        assertThrows(BadRequestException.class, () -> {
-            messageService.deleteMessage(nullMessageId);
+            messageService.deleteMessage(invalidMessageId, "");
         });
     }
 }

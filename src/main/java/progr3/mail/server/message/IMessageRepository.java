@@ -15,5 +15,7 @@ public interface IMessageRepository {
 
         String saveMessage(Message message) throws BadRequestException, IOException;
 
+        void updateMessage(Message message) throws BadRequestException, MessageNotFoundException, IOException;
+
         void deleteMessage(String messageId) throws BadRequestException, MessageNotFoundException, IOException;
 }

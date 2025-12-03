@@ -24,9 +24,6 @@ public class MessageValidator {
         if (message.getBody() == null) {
             return "Invalid body";
         }
-        if (message.getIsForwarded() == null) {
-            return "Invalid isForwarded flag";
-        }
         return null; // Message is valid
     }
 
