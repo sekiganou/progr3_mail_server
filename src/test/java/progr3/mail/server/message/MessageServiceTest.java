@@ -3,7 +3,6 @@ package progr3.mail.server.message;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -131,99 +130,6 @@ public class MessageServiceTest {
         assertEquals(body, savedMessage.getBody());
         assertNotNull(savedMessage.getGuid());
         assertNotNull(savedMessage.getDate());
-    }
-
-    @Test
-    void replySingleToMessage_WithValidMessage_ShouldCreateReply()
-            throws MessageNotFoundException, BadRequestException, IOException {
-        String senderUserId = testUser2.getGuid();
-        String originalMessageId = testMessage1.getGuid();
-        String subject = "Re: Original Subject";
-        String body = "Reply body";
-
-        String result = messageService.replySingleToMessage(senderUserId, originalMessageId, subject, body);
-
-        assertNotNull(result);
-
-        Message replyMessage = messageService.getMessageDetails(result);
-
-        assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertEquals(Arrays.asList(testUser1.getGuid()), replyMessage.getRecipientsUserGUIDs());
-        assertEquals(subject, replyMessage.getSubject());
-        assertEquals(body, replyMessage.getBody());
-    }
-
-    @Test
-    void replySingleToMessage_WhenOriginalMessageNotFound_ShouldThrowMessageNotFoundException() {
-        String senderUserId = testUser2.getGuid();
-        String originalMessageId = "msg-3";
-        String subject = "Re: Original Subject";
-        String body = "Reply body";
-
-        assertThrows(MessageNotFoundException.class, () -> {
-            messageService.replySingleToMessage(senderUserId, originalMessageId, subject, body);
-        });
-    }
-
-    @Test
-    void replyAllToMessage_WithValidMessage_ShouldCreateReply()
-            throws MessageNotFoundException, BadRequestException, IOException {
-        String senderUserId = testUser2.getGuid();
-        String originalMessageId = testMessage1.getGuid();
-        String subject = "Re: Original Subject";
-        String body = "Reply All body";
-
-        String result = messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
-
-        assertNotNull(result);
-
-        Message replyMessage = messageService.getMessageDetails(result);
-        assertEquals(senderUserId, replyMessage.getSenderUserGUID());
-        assertTrue(replyMessage.getRecipientsUserGUIDs().contains(testUser1.getGuid()));
-        // assertTrue(replyMessage.getRecipientsUserEmails().contains(testUser1.getEmail()));
-        assertEquals(subject, replyMessage.getSubject());
-        assertEquals(body, replyMessage.getBody());
-    }
-
-    @Test
-    void replyAllToMessage_WhenOriginalMessageNotFound_ShouldThrowMessageNotFoundException() {
-        String senderUserId = testUser2.getGuid();
-        String originalMessageId = "non-existent-msg-id";
-        String subject = "Re: Original Subject";
-        String body = "Reply All body";
-
-        assertThrows(MessageNotFoundException.class, () -> {
-            messageService.replyAllToMessage(senderUserId, originalMessageId, subject, body);
-        });
-    }
-
-    @Test
-    void forwardMessage_WithValidRecipients_ShouldCreateForward()
-            throws UserNotFoundException, MessageNotFoundException, BadRequestException, IOException {
-        String forwarderUserId = testUser2.getGuid();
-        String originalMessageId = testMessage1.getGuid();
-        List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
-        List<String> recipientGUIDs = Arrays.asList(testUser2.getGuid());
-
-        String resultId = messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
-
-        assertNotNull(resultId);
-
-        Message forwardedMessage = messageService.getMessageDetails(resultId);
-        assertEquals(forwarderUserId, forwardedMessage.getSenderUserGUID());
-        assertEquals(recipientGUIDs, forwardedMessage.getRecipientsUserGUIDs());
-        assertEquals(Message.IsForwarded.YES, forwardedMessage.getIsForwarded());
-    }
-
-    @Test
-    void forwardMessage_WithInvalidMessageId_ShouldThrowMessageNotFoundException() {
-        String forwarderUserId = testUser2.getGuid();
-        String originalMessageId = "non-existent-msg-id";
-        List<String> recipientEmails = Arrays.asList(testUser2.getEmail());
-
-        assertThrows(MessageNotFoundException.class, () -> {
-            messageService.forwardMessage(forwarderUserId, originalMessageId, recipientEmails);
-        });
     }
 
     @Test
