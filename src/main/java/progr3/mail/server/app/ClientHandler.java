@@ -3,6 +3,7 @@ package progr3.mail.server.app;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,7 @@ public class ClientHandler implements Runnable {
     private MessageService messageService;
     private UserService userService;
     private Socket clientSocket;
+    private final int TIMEOUT_MILLISECONDS = 30000;
 
     public ClientHandler(Socket clientSocket, ILogger logger, UserService userService,
             MessageService messageService) {
@@ -178,16 +180,22 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        logger.startScope();
-        logger.logInfo("Client connected: " + clientSocket.getInetAddress().getHostAddress());
+        try {
+            clientSocket.setSoTimeout(TIMEOUT_MILLISECONDS);
 
-        byte[] inputStreamBytes = readInputStream(clientSocket);
+            logger.startScope();
+            logger.logInfo("Client connected: " + clientSocket.getInetAddress().getHostAddress());
 
-        Request request = parseRequest(inputStreamBytes);
+            byte[] inputStreamBytes = readInputStream(clientSocket);
 
-        Response response = processRequest(request);
+            Request request = parseRequest(inputStreamBytes);
 
-        writeOutputStream(clientSocket, response);
+            Response response = processRequest(request);
+
+            writeOutputStream(clientSocket, response);
+        } catch (SocketException e) {
+            logger.logError("Socket timeout: No data received from client");
+        }
 
         try {
             clientSocket.close();

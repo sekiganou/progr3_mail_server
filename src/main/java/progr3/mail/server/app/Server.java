@@ -3,7 +3,9 @@ package progr3.mail.server.app;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import progr3.mail.server.log.ILogger;
 import progr3.mail.server.message.MessageService;
@@ -16,9 +18,11 @@ public class Server implements Runnable {
     private UserService userService;
 
     private final int N_WORKERS = 10;
+    private final int TIMEOUT_SECONDS = 5;
     private final int PORT = 8080;
     private volatile boolean running = true;
     private ServerSocket serverSocket;
+    private ExecutorService pool;
 
     public Server(UserService userService, MessageService messageService, ILogger logger) {
         this.logger = logger;
@@ -32,7 +36,7 @@ public class Server implements Runnable {
         logger.logInfo("Starting Mail Server...");
         logger.endScope();
 
-        Executor pool = Executors.newFixedThreadPool(N_WORKERS);
+        pool = Executors.newFixedThreadPool(N_WORKERS);
 
         try (var serverSocket = new java.net.ServerSocket(PORT)) {
             this.serverSocket = serverSocket;
@@ -64,6 +68,7 @@ public class Server implements Runnable {
 
     public void stopServer() {
         running = false;
+
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close(); // This unblocks accept()
@@ -73,6 +78,19 @@ public class Server implements Runnable {
                 logger.endScope();
             }
         }
+
+        if (pool != null && !pool.isShutdown()) {
+            try {
+                pool.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                pool.shutdown();
+            } catch (InterruptedException e) {
+                logger.startScope();
+                logger.logError("Error shutting down thread pool: " + e.getMessage());
+                logger.endScope();
+            }
+
+        }
+
         logger.startScope();
         logger.logInfo("Server stop requested.");
         logger.endScope();
