@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonFileHandler implements IJsonFileHandler {
     private final ObjectMapper mapper;
+    // Map to hold locks for each file. ConcurrentHashMap to allow concurrent access
+    // to the map itself.
     private final Map<String, ReadWriteLock> fileLocks = new ConcurrentHashMap<>();
 
     public JsonFileHandler() {
@@ -22,6 +24,9 @@ public class JsonFileHandler implements IJsonFileHandler {
     }
 
     public <T> void saveToFile(T obj, String filename, Class<T> clazz) throws IOException {
+        // Get or create the lock for this file. It supports reentrancy, meaning the
+        // same lock can be acquired multiple times by the same thread without causing a
+        // deadlock. ComputeIfAbsent ensures that only one lock is created per filename.
         ReadWriteLock lock = fileLocks.computeIfAbsent(filename, k -> new ReentrantReadWriteLock());
         lock.writeLock().lock();
         try {

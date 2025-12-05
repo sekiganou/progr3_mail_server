@@ -118,7 +118,7 @@ public class ClientHandler implements Runnable {
             logger.logError(message);
             response = ResponseConstructor.badRequest(message, null);
         } catch (UserNotFoundException e) {
-            String message = "User not found";
+            String message = e.getMessage();
             logger.logError(message);
             response = ResponseConstructor.notFound(message, null);
         } catch (IOException e) {

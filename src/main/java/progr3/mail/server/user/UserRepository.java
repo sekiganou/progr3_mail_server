@@ -67,7 +67,7 @@ public class UserRepository implements IUserRepository {
             throw new BadRequestException("User ID cannot be null");
         var user = usersById.get(userId);
         if (user == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userId);
         }
         return user;
     }
@@ -79,7 +79,7 @@ public class UserRepository implements IUserRepository {
 
         var user = usersByEmail.get(email);
         if (user == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(email);
         }
 
         return user;

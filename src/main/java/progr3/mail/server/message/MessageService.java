@@ -97,7 +97,7 @@ public class MessageService {
         newMessage.setDeletedRecipientsUserGUIDs(deletedRecipients);
 
         if (deletedRecipients.equals(recipients)) {
-            // this is completely arbitrary, it's just to save on some space disk
+            // this is completely arbitrary, it's just to save on some disk space
             logger.logInfo(
                     "All recipients have deleted the message with ID: " + messageId + ". Removing message entirely.");
             messageRepository.deleteMessage(messageId);
