@@ -2,9 +2,9 @@ package progr3.mail.server.user;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.UserNotFoundException;
@@ -15,8 +15,8 @@ import progr3.mail.server.user.core.UserValidator;
 public class UserRepository implements IUserRepository {
 
     private final IJsonFileHandler jsonFileHandler;
-    private final Map<String, User> usersByEmail = new HashMap<>();
-    private final Map<String, User> usersById = new HashMap<>();
+    private final Map<String, User> usersByEmail = new ConcurrentHashMap<>();
+    private final Map<String, User> usersById = new ConcurrentHashMap<>();
     private final String filePath;
 
     public UserRepository(IJsonFileHandler jsonFileHandler, String filePath) {

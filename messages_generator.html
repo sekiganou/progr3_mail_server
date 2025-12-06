@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generatore 1000 Messaggi</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .container {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .info {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2196f3;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      button {
+        background: #2196f3;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      button:hover {
+        background: #1976d2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button.secondary {
+        background: #4caf50;
+      }
+      button.secondary:hover {
+        background: #45a049;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #2196f3;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+      #output {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: none;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        display: none;
+      }
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2196f3, #21cbf3);
+        width: 0%;
+        transition: width 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Generatore Messaggi Email</h1>
+
+      <div class="info">
+        <strong>📧 Destinatario:</strong> Alessio Bagno
+        (alessio-bagno@unito.com)<br />
+        <strong>🔑 GUID:</strong> 5e868999-81eb-44c4-907d-f9e90112a162
+      </div>
+
+      <div style="margin-bottom: 20px">
+        <label
+          for="messageCount"
+          style="
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+          "
+        >
+          📊 Numero di messaggi da generare:
+        </label>
+        <input
+          type="number"
+          id="messageCountInput"
+          min="1"
+          max="10000"
+          value="1000"
+          style="
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+          "
+          placeholder="Inserisci un numero (1-10000)"
+        />
+        <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap">
+          <button
+            onclick="setMessageCount(100)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            100
+          </button>
+          <button
+            onclick="setMessageCount(500)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            500
+          </button>
+          <button
+            onclick="setMessageCount(1000)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            1000
+          </button>
+          <button
+            onclick="setMessageCount(2500)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            2500
+          </button>
+          <button
+            onclick="setMessageCount(5000)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            5000
+          </button>
+          <button
+            onclick="setMessageCount(10000)"
+            style="padding: 6px 12px; font-size: 12px; background: #9c27b0"
+          >
+            10000
+          </button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="messageCount">0</div>
+          <div class="stat-label">Messaggi Generati</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="fileSize">0 KB</div>
+          <div class="stat-label">Dimensione File</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="genTime">0 ms</div>
+          <div class="stat-label">Tempo Generazione</div>
+        </div>
+      </div>
+
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="controls">
+        <button onclick="generateMessages()">🎲 Genera Messaggi</button>
+        <button class="secondary" onclick="downloadJSON()">
+          💾 Download JSON
+        </button>
+        <button class="secondary" onclick="copyToClipboard()">
+          📋 Copia negli Appunti
+        </button>
+      </div>
+
+      <div id="output"></div>
+    </div>
+
+    <script>
+      let generatedJSON = null;
+
+      const users = [
+        {
+          GUID: "cb0466b6-348b-444f-9ee4-189573a606b5",
+          Name: "Mario Rossi",
+          Email: "mariorossi@unito.com",
+        },
+        {
+          GUID: "c93ffd33-525f-41cd-8141-4b738a90d7e8",
+          Name: "Luca Bianchi",
+          Email: "luca.bianchi@unito.com",
+        },
+        {
+          GUID: "5e868999-81eb-44c4-907d-f9e90112a162",
+          Name: "Alessio Bagno",
+          Email: "alessio-bagno@unito.com",
+        },
+      ];
+
+      const targetUser = "5e868999-81eb-44c4-907d-f9e90112a162";
+
+      const subjects = [
+        "Aggiornamento progetto",
+        "Riunione di team",
+        "Richiesta informazioni",
+        "Report settimanale",
+        "Conferma appuntamento",
+        "Documentazione richiesta",
+        "Nuovo task assegnato",
+        "Feedback sul lavoro",
+        "Proposta collaborazione",
+        "Deadline imminente",
+        "Revisione codice",
+        "Bug fix urgente",
+        "Release note v",
+        "Meeting notes",
+        "Richiesta ferie",
+        "Approvazione budget",
+        "Formazione obbligatoria",
+        "Benvenuto nel team",
+        "Cambio procedura",
+        "Aggiornamento sicurezza",
+        "Newsletter mensile",
+        "Invito evento",
+        "Congratulazioni!",
+        "Reminder importante",
+        "Status update",
+        "Proposta miglioramento",
+        "Richiesta supporto",
+        "Comunicazione urgente",
+        "Info su nuovo progetto",
+        "Conferma presenza",
+        "Dati statistiche",
+        "Piano d'azione",
+        "Retrospettiva sprint",
+        "Demo scheduling",
+        "Code review feedback",
+        "Performance review",
+        "Onboarding materiale",
+        "Policy update",
+        "System maintenance",
+        "Training session",
+        "Team building",
+        "Quarterly goals",
+        "Customer feedback",
+        "Issue tracking",
+        "Deploy notification",
+        "Security alert",
+        "License renewal",
+        "Invoice attached",
+        "Contract review",
+        "Partnership proposal",
+        "Marketing campaign",
+      ];
+
+      const bodyTemplates = [
+        "Buongiorno, volevo aggiornarti sullo stato del progetto. Abbiamo fatto progressi significativi questa settimana.",
+        "Ti scrivo per confermare la riunione di domani alle 14:00. Per favore conferma la tua presenza.",
+        "Ho bisogno di alcune informazioni aggiuntive per completare il report. Puoi fornirmele entro venerdì?",
+        "Allego il report settimanale con tutti i KPI aggiornati. Fammi sapere se hai domande.",
+        "Volevo condividere con te alcuni feedback sul lavoro svolto. Nel complesso ottimo, con margini di miglioramento.",
+        "Ti è stato assegnato un nuovo task sul progetto Alpha. Deadline: fine mese.",
+        "Abbiamo identificato un bug critico in produzione. Serve intervento immediato.",
+        "Le release note della versione 2.3.4 sono pronte. Puoi rivederle prima del deploy?",
+        "Reminder: la formazione obbligatoria sulla sicurezza è prevista per lunedì prossimo.",
+        "Congratulazioni per l'ottimo lavoro! Il cliente è molto soddisfatto dei risultati.",
+        "Abbiamo aggiornato le procedure operative. Leggi attentamente il documento allegato.",
+        "Invito all'evento di team building del prossimo weekend. RSVP entro mercoledì.",
+        "Status update sul progetto Beta: siamo al 75% di completamento, on track per la deadline.",
+        "Ho una proposta di miglioramento per il processo di code review. Possiamo discuterne?",
+        "Serve supporto urgente sul modulo di autenticazione. Quando sei disponibile?",
+        "Comunicazione importante: il sistema sarà in manutenzione sabato dalle 2 alle 6.",
+        "Ti invio i dati statistici dell'ultimo trimestre. Analisi dettagliata in allegato.",
+        "Il piano d'azione per il Q4 è pronto. Review meeting fissato per giovedì.",
+        "Retrospettiva dello sprint 23: cosa ha funzionato, cosa migliorare, action items.",
+        "Vorrei schedulare una demo del nuovo feature per il management. Proponi qualche slot.",
+        "Feedback sulla tua ultima pull request: codice pulito, ma mancano alcuni test.",
+        "È tempo della tua performance review annuale. Ho schedulato un meeting per discuterne.",
+        "Materiale di onboarding per i nuovi assunti. Per favore rivedilo e fornisci feedback.",
+        "Aggiornamento policy aziendale su lavoro remoto. Effettivo dal 1° del mese.",
+        "Alert: rilevata attività sospetta sul server. Team security sta investigando.",
+        "Reminder: le licenze software scadono il 30. Procedere con il renewal?",
+        "Fattura del trimestre in allegato. Verifica i dettagli e approva il pagamento.",
+        "Il contratto con il vendor X è in scadenza. Dobbiamo rinnovare o cercare alternative?",
+        "Proposta di partnership con azienda Y. Allegato il pitch deck, valuta l'opportunità.",
+        "Nuova campagna marketing in partenza. Serve il tuo input sul messaging.",
+      ];
+
+      function generateGUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
+
+      function randomDate(start, end) {
+        return new Date(
+          start.getTime() + Math.random() * (end.getTime() - start.getTime())
+        );
+      }
+
+      function getRandomElement(array) {
+        return array[Math.floor(Math.random() * array.length)];
+      }
+
+      function setMessageCount(count) {
+        document.getElementById("messageCountInput").value = count;
+      }
+
+      function generateMessages() {
+        const input = document.getElementById("messageCountInput");
+        const count = parseInt(input.value);
+
+        // Validazione
+        if (isNaN(count) || count < 1 || count > 10000) {
+          showStatus("❌ Inserisci un numero tra 1 e 10000!", "error");
+          return;
+        }
+
+        const startTime = performance.now();
+        const messages = [];
+        const progressBar = document.getElementById("progressBar");
+        const progressFill = document.getElementById("progressFill");
+
+        progressBar.style.display = "block";
+        showStatus(`Generazione di ${count} messaggi in corso...`, "success");
+
+        // Date range: ultimi 2 anni
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(endDate.getFullYear() - 2);
+
+        // Intervallo per update progressbar (ogni 5% o minimo ogni 50 messaggi)
+        const updateInterval = Math.max(50, Math.floor(count / 20));
+
+        for (let i = 0; i < count; i++) {
+          // Aggiorna progress bar
+          if (i % updateInterval === 0) {
+            progressFill.style.width = (i / count) * 100 + "%";
+          }
+
+          // Seleziona mittente casuale (escluso destinatario)
+          const senders = users.filter((u) => u.GUID !== targetUser);
+          const sender = getRandomElement(senders);
+
+          // 70% singolo destinatario, 30% multiplo
+          const isMultiple = Math.random() > 0.7;
+          let recipients = [targetUser];
+
+          if (isMultiple) {
+            // Aggiungi 1-2 destinatari extra
+            const extraCount = Math.floor(Math.random() * 2) + 1;
+            const otherUsers = users.filter((u) => u.GUID !== sender.GUID);
+            for (let j = 0; j < extraCount && j < otherUsers.length; j++) {
+              const extra = otherUsers[j];
+              if (!recipients.includes(extra.GUID)) {
+                recipients.push(extra.GUID);
+              }
+            }
+          }
+
+          // 5% dei messaggi sono stati cancellati da qualcuno
+          const deletedRecipients = [];
+          if (Math.random() < 0.05 && recipients.length > 1) {
+            const randomRecipient =
+              recipients[Math.floor(Math.random() * recipients.length)];
+            if (randomRecipient !== targetUser) {
+              deletedRecipients.push(randomRecipient);
+            }
+          }
+
+          // Subject
+          const baseSubject = getRandomElement(subjects);
+          const subjectSuffix =
+            Math.random() > 0.5 ? ` ${Math.floor(Math.random() * 100)}` : "";
+          const subject = baseSubject + subjectSuffix;
+
+          // Body
+          const bodyTemplate = getRandomElement(bodyTemplates);
+          const additionalInfo =
+            Math.random() > 0.5
+              ? `\n\nRiferimento ticket: #${Math.floor(Math.random() * 10000)}`
+              : "";
+          const body = bodyTemplate + additionalInfo;
+
+          // Date
+          const messageDate = randomDate(startDate, endDate);
+
+          // 10% dei messaggi sono reply
+          const isReply = Math.random() < 0.1;
+          const replyToGUID =
+            isReply && i > 0
+              ? messages[Math.floor(Math.random() * i)].GUID
+              : null;
+
+          const message = {
+            GUID: generateGUID(),
+            SenderUserGUID: sender.GUID,
+            RecipientsUserGUIDs: recipients,
+            DeletedRecipientsUserGUIDs: deletedRecipients,
+            Subject: subject,
+            Body: body,
+            Date: messageDate.toISOString(),
+            ReplyToMessageGUID: replyToGUID,
+          };
+
+          messages.push(message);
+        }
+
+        // Ordina per data (più recenti prima)
+        messages.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+
+        generatedJSON = JSON.stringify(messages, null, 2);
+        const endTime = performance.now();
+
+        // Aggiorna UI
+        progressFill.style.width = "100%";
+        setTimeout(() => {
+          progressBar.style.display = "none";
+          progressFill.style.width = "0%";
+        }, 500);
+
+        document.getElementById("messageCount").textContent =
+          count.toLocaleString();
+        document.getElementById("fileSize").textContent =
+          (generatedJSON.length / 1024).toFixed(2) + " KB";
+        document.getElementById("genTime").textContent =
+          Math.round(endTime - startTime) + " ms";
+
+        // Mostra preview (primi 5000 caratteri)
+        const preview =
+          generatedJSON.substring(0, 5000) +
+          (generatedJSON.length > 5000
+            ? "\n\n... (resto del JSON troncato nella preview)"
+            : "");
+        document.getElementById("output").textContent = preview;
+
+        showStatus(
+          `✅ ${count.toLocaleString()} messaggi generati con successo!`,
+          "success"
+        );
+      }
+
+      function downloadJSON() {
+        if (!generatedJSON) {
+          showStatus("❌ Genera prima i messaggi!", "error");
+          return;
+        }
+
+        const count = document.getElementById("messageCountInput").value;
+        const blob = new Blob([generatedJSON], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `messages_${count}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showStatus("✅ File scaricato!", "success");
+      }
+
+      function copyToClipboard() {
+        if (!generatedJSON) {
+          showStatus("❌ Genera prima i messaggi!", "error");
+          return;
+        }
+
+        navigator.clipboard
+          .writeText(generatedJSON)
+          .then(() => {
+            showStatus("✅ JSON copiato negli appunti!", "success");
+          })
+          .catch((err) => {
+            showStatus("❌ Errore nella copia: " + err, "error");
+          });
+      }
+
+      function showStatus(message, type) {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = "status " + type;
+
+        if (type === "success") {
+          setTimeout(() => {
+            status.style.display = "none";
+          }, 3000);
+        }
+      }
+
+      // Genera automaticamente all'avvio con valore di default
+      window.onload = () => {
+        // Non genera automaticamente, attende input utente
+      };
+    </script>
+  </body>
+</html>

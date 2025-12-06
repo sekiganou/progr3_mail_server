@@ -27,7 +27,7 @@ public class ClientHandler implements Runnable {
     private MessageService messageService;
     private UserService userService;
     private Socket clientSocket;
-    private final int TIMEOUT_MILLISECONDS = 30000;
+    private final int CONNECTION_TIMEOUT_MS = 30000;
 
     public ClientHandler(Socket clientSocket, ILogger logger, UserService userService,
             MessageService messageService) {
@@ -181,7 +181,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            clientSocket.setSoTimeout(TIMEOUT_MILLISECONDS);
+            clientSocket.setSoTimeout(CONNECTION_TIMEOUT_MS);
 
             logger.startScope();
             logger.logInfo("Client connected: " + clientSocket.getInetAddress().getHostAddress());

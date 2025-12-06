@@ -2,9 +2,9 @@ package progr3.mail.server.message;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import progr3.mail.server.exceptions.BadRequestException;
 import progr3.mail.server.exceptions.MessageNotFoundException;
@@ -15,8 +15,8 @@ import progr3.mail.server.model.Message;
 public class MessageRepository implements IMessageRepository {
 
     private final IJsonFileHandler jsonFileHandler;
-    private final Map<String, List<Message>> messagesByUserId = new HashMap<>();
-    private final Map<String, Message> messagesById = new HashMap<>();
+    private final Map<String, List<Message>> messagesByUserId = new ConcurrentHashMap<>();
+    private final Map<String, Message> messagesById = new ConcurrentHashMap<>();
     private final String filePath;
 
     public MessageRepository(IJsonFileHandler jsonFileHandler, String filePath) {
@@ -56,11 +56,10 @@ public class MessageRepository implements IMessageRepository {
 
     @Override
     public Message getMessageDetails(String messageId) throws MessageNotFoundException {
-        var message = messagesById.get(messageId);
-        if (message == null) {
+        if (messageId == null || messageId.isEmpty() || !messagesById.containsKey(messageId)) {
             throw new MessageNotFoundException();
         }
-        return message;
+        return messagesById.get(messageId);
     }
 
     @Override

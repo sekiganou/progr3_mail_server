@@ -2,7 +2,6 @@ package progr3.mail.server.app;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +17,7 @@ public class Server implements Runnable {
     private UserService userService;
 
     private final int N_WORKERS = 10;
-    private final int TIMEOUT_SECONDS = 5;
+    private final int TASK_TIMEOUT_S = 5;
     private final int PORT = 8080;
     private volatile boolean running = true;
     private ServerSocket serverSocket;
@@ -81,7 +80,7 @@ public class Server implements Runnable {
 
         if (pool != null && !pool.isShutdown()) {
             try {
-                pool.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                pool.awaitTermination(TASK_TIMEOUT_S, TimeUnit.SECONDS);
                 pool.shutdown();
             } catch (InterruptedException e) {
                 logger.startScope();
