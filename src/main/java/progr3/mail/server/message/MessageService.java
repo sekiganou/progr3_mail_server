@@ -96,17 +96,18 @@ public class MessageService {
         deletedRecipients.add(userId);
         newMessage.setDeletedRecipientsUserGUIDs(deletedRecipients);
 
-        if (deletedRecipients.equals(recipients)) {
-            // this is completely arbitrary, it's just to save on some disk space
-            logger.logInfo(
-                    "All recipients have deleted the message with ID: " + messageId + ". Removing message entirely.");
-            messageRepository.deleteMessage(messageId);
-        } else {
-            logger.logInfo(
-                    "User with ID: " + userId + " has deleted the message with ID: " + messageId
-                            + ". Updating message.");
-            messageRepository.updateMessage(newMessage);
-        }
+        // if (deletedRecipients.equals(recipients)) {
+        // // this is completely arbitrary, it's just to save on some disk space
+        // logger.logInfo(
+        // "All recipients have deleted the message with ID: " + messageId + ". Removing
+        // message entirely.");
+        // messageRepository.deleteMessage(messageId);
+        // } else {
+        logger.logInfo(
+                "User with ID: " + userId + " has deleted the message with ID: " + messageId
+                        + ". Updating message.");
+        messageRepository.updateMessage(newMessage);
+        // }
 
     }
 

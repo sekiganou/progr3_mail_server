@@ -102,7 +102,7 @@ public class MessageRepository implements IMessageRepository {
         }
 
         var recipients = new ArrayList<>(existingMessage.getRecipientsUserGUIDs());
-        if (!recipients.containsAll(newMessage.getRecipientsUserGUIDs())) {
+        if (newMessage.getRecipientsUserGUIDs().size() > recipients.size()) {
             throw new BadRequestException("Cannot add new recipients to the message");
         }
 
@@ -110,8 +110,9 @@ public class MessageRepository implements IMessageRepository {
 
         var deletedRecipients = new ArrayList<>(newMessage.getDeletedRecipientsUserGUIDs());
         for (String recipientGUID : recipients) {
-            if (deletedRecipients.contains(recipientGUID)) {
-                messagesByUserId.get(recipientGUID).removeIf(msg -> msg.getGuid().equals(messageId));
+            List<Message> userMessages = messagesByUserId.get(recipientGUID);
+            if (userMessages != null && deletedRecipients.contains(recipientGUID)) {
+                userMessages.removeIf(msg -> msg.getGuid().equals(messageId));
             }
         }
 

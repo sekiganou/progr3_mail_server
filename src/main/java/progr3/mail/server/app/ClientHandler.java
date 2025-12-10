@@ -129,7 +129,7 @@ public class ClientHandler implements Runnable {
             response = ResponseConstructor.internalServerError(message, null);
         } catch (Exception e) {
             String message = "Unexpected error";
-            logger.logError(message);
+            logger.logError(message + ": " + e.getMessage());
             response = ResponseConstructor.internalServerError(message, null);
         }
 
