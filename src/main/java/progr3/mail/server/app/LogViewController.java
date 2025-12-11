@@ -1,6 +1,7 @@
 package progr3.mail.server.app;
 
 import progr3.mail.server.io.JsonFileHandler;
+import progr3.mail.server.log.Logger;
 import progr3.mail.server.model.Log;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -47,7 +48,7 @@ public class LogViewController {
     private ObservableList<Log> filteredLogEntries = FXCollections.observableArrayList();
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String LOG_FILE_PATH = "data/prod/logs.json";
+    private static final String LOG_FILE_PATH = Logger.getLogFilePath();
 
     public LogViewController() {
         this.jsonFileHandler = new JsonFileHandler();

@@ -89,7 +89,7 @@ public class MessageService {
             throw new BadRequestException("User is not a recipient of the message");
         }
 
-        var newMessage = MessageConstructor.copyFrom(message);
+        var newMessage = MessageConstructor.clone(message);
         var deletedRecipients = new ArrayList<>(message.getDeletedRecipientsUserGUIDs());
 
         newMessage.setGuid(messageId);

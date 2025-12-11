@@ -8,7 +8,7 @@ import progr3.mail.server.model.Log.LogLevel;
 
 public class Logger implements ILogger {
     private LogLevelEnum currentLogLevel;
-    private String logFilePath;
+    private static String logFilePath;
     private boolean logToFile;
     private boolean logToConsole;
     private IJsonFileHandler jsonFileHandler;
@@ -18,7 +18,7 @@ public class Logger implements ILogger {
             LogLevelEnum level, String logFilePath, boolean logToFile, boolean logToConsole,
             IJsonFileHandler jsonFileHandler) {
         this.currentLogLevel = level;
-        this.logFilePath = logFilePath;
+        Logger.logFilePath = logFilePath;
         this.logToFile = logToFile;
         this.logToConsole = logToConsole;
         this.jsonFileHandler = jsonFileHandler;
@@ -27,6 +27,10 @@ public class Logger implements ILogger {
         if (logFile.exists()) {
             logFile.delete();
         }
+    }
+
+    public static String getLogFilePath() {
+        return logFilePath;
     }
 
     public void startScope() {

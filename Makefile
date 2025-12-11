@@ -6,7 +6,7 @@ build:
 test: build
 	mvn test
 
-run: build
+run:
 	mvn exec:java -Dexec.mainClass=$(MAIN_CLASS)
 
 clean:

@@ -20,7 +20,7 @@ public class MessageConstructor {
         return message;
     }
 
-    public static Message copyFrom(Message message) {
+    public static Message clone(Message message) {
         var newMessage = new Message();
         newMessage.setSenderUserGUID(message.getSenderUserGUID());
         newMessage.setRecipientsUserGUIDs(message.getRecipientsUserGUIDs());
